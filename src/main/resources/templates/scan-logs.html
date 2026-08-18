@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::div.content-wrapper}, 'Scan Logs')}">
+<body>
+<div class="content-wrapper">
+
+    <!-- KPI Summary Cards Grid -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <span class="kpi-title">Compliance Rate</span>
+            <span class="kpi-value text-emerald" th:text="${analytics.complianceRate} + '%'">98.5%</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-title">Total Scans</span>
+            <span class="kpi-value text-info" th:text="${analytics.totalScans}">24</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-title">Active Duties</span>
+            <span class="kpi-value text-warning" th:text="${analytics.activeDuties}">1</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-title">Incident Alerts</span>
+            <span class="kpi-value text-danger" th:text="${analytics.incidentScans}">0</span>
+        </div>
+    </div>
+
+    <!-- Desktop Side-by-Side Grid Container -->
+    <div class="row g-4">
+        <!-- Left Column: Live QR Camera & Quick Triggers -->
+        <div class="col-lg-6">
+            <div class="scanner-box">
+                <div id="qr-reader" class="scanner-video-container"></div>
+                <h5><i class="bi bi-camera-fill me-2 text-info"></i>QR Checkpoint Scanner</h5>
+                <p>Align physical checkpoint QR code in the camera frame or use test trigger buttons below.</p>
+                
+                <div class="input-group input-group-sm mb-3">
+                    <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-pencil-square"></i></span>
+                    <input type="text" id="scanNotesInput" class="form-control" placeholder="Optional inspection notes (e.g. Door locked, AC OK)...">
+                </div>
+
+                <button class="btn btn-primary btn-sm rounded-pill px-4 mb-3" onclick="startCameraScanner()">
+                    <i class="bi bi-camera me-1"></i> Start Camera Scan
+                </button>
+
+                <!-- Quick Test Triggers -->
+                <div class="text-start mt-2">
+                    <small class="text-muted d-block mb-2 font-weight-bold">Quick Test QR Code Triggers:</small>
+                    <div class="quick-qr-list">
+                        <button class="quick-qr-btn" onclick="quickScan('QR-GATE-MAIN-101')">
+                            <i class="bi bi-qr-code me-1"></i>Main Gate Entrance
+                        </button>
+                        <button class="quick-qr-btn" onclick="quickScan('QR-PERIM-NORTH-102')">
+                            <i class="bi bi-qr-code me-1"></i>North Perimeter
+                        </button>
+                        <button class="quick-qr-btn" onclick="quickScan('QR-SERVER-CTRL-103')">
+                            <i class="bi bi-qr-code me-1"></i>Server Room
+                        </button>
+                        <button class="quick-qr-btn" onclick="quickScan('QR-WH-BLDG-B-104')">
+                            <i class="bi bi-qr-code me-1"></i>Warehouse B
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Recent Scan Activity Feed -->
+        <div class="col-lg-6">
+            <div class="card bg-dark border-secondary h-100 p-3">
+                <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary pb-2">
+                    <h6 class="m-0 text-info fw-bold"><i class="bi bi-clock-history me-2"></i>Live Scan Activity Stream</h6>
+                    <button class="btn btn-sm btn-outline-info rounded-pill" onclick="exportScanLogsCSV()">
+                        <i class="bi bi-download me-1"></i>Export CSV
+                    </button>
+                </div>
+
+                <div class="scan-feed" style="max-height: 480px; overflow-y: auto;">
+                    <div th:each="log : ${scanLogs}" class="log-card">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <strong class="fs-6 text-light" th:text="${log.checkpointId}">chk-101</strong>
+                                <span th:if="${log.status == 'On-Time'}" class="badge-on-time">On-Time</span>
+                                <span th:if="${log.status == 'Incident'}" class="badge-incident">Incident</span>
+                                <span th:if="${log.status == 'Late'}" class="badge-late">Late</span>
+                            </div>
+                            <div class="text-muted small">
+                                <i class="bi bi-person me-1"></i><span th:text="${log.userId}">usr-001</span>
+                                <span class="mx-1">•</span>
+                                <i class="bi bi-geo-alt me-1"></i><span th:text="${log.latitude} + ', ' + ${log.longitude}">25.56, 83.97</span>
+                            </div>
+                            <div th:if="${log.notes != null and !log.notes.isEmpty()}" class="small text-info mt-1">
+                                <i class="bi bi-chat-left-text me-1"></i><span th:text="${log.notes}">Notes</span>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-secondary small font-monospace" th:text="${#temporals.format(log.scanTime, 'HH:mm:ss')}">14:32:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

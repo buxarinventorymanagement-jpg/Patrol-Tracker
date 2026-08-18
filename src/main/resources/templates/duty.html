@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::div.content-wrapper}, 'Duty Allocation')}">
+<body>
+<div class="content-wrapper">
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h5 class="m-0"><i class="bi bi-calendar-check text-info me-2"></i>Duty Allocations & Mobile SMS</h5>
+            <small class="text-muted">Assigned patrol shifts & automated mobile alerts</small>
+        </div>
+        <button th:if="${isStationInCharge}" class="btn btn-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#newDutyModal">
+            <i class="bi bi-plus-lg me-1"></i>Assign Duty (SMS)
+        </button>
+    </div>
+
+    <!-- Duty Allocation Cards List -->
+    <div class="row g-3">
+        <div th:each="d : ${duties}" class="col-12">
+            <div class="card bg-dark border-secondary h-100 p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h6 class="m-0 text-info fw-bold" th:text="${d.shiftName}">Morning Shift</h6>
+                        <span class="badge bg-secondary mt-1" th:text="${d.dutyId}">duty-801</span>
+                    </div>
+                    <div class="text-end">
+                        <span th:if="${d.status == 'In Progress'}" class="badge bg-success">In Progress</span>
+                        <span th:if="${d.status == 'Assigned'}" class="badge bg-info text-dark">Assigned</span>
+                        <div class="mt-1">
+                            <span class="badge bg-dark border border-info text-cyan" style="font-size:0.65rem;">
+                                <i class="bi bi-phone me-1"></i>SMS: <span th:text="${d.smsStatus}">Delivered</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="small text-muted mb-2">
+                    <div class="mb-1"><i class="bi bi-person-fill text-secondary me-2"></i><strong>Personnel:</strong> <span th:text="${d.userId}">usr-001</span></div>
+                    <div class="mb-1"><i class="bi bi-person-badge text-warning me-2"></i><strong>Station In-charge:</strong> <span th:text="${d.stationInChargeId}">usr-003</span></div>
+                    <div><i class="bi bi-clock me-2"></i><span th:text="${#temporals.format(d.startTime, 'MMM dd, HH:mm')} + ' - ' + ${#temporals.format(d.endTime, 'HH:mm')}">Time</span></div>
+                </div>
+
+                <div class="bg-card-hover p-2 rounded mb-2">
+                    <small class="text-muted d-block mb-1">Assigned Checkpoints Route:</small>
+                    <div class="d-flex flex-wrap gap-1">
+                        <span th:each="chkId : ${#strings.arraySplit(d.checkpointsList, ',')}" 
+                              class="badge bg-dark border border-secondary text-light font-monospace" 
+                              th:text="${chkId}">
+                            chk-101
+                        </span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
+                    <small class="text-emerald"><i class="bi bi-check-circle me-1"></i>Personnel Alerted via Mobile SMS</small>
+                    <a th:href="@{/scan-logs}" class="btn btn-outline-info btn-sm">Scan QR Checkpoint</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Duty Modal -->
+    <div class="modal fade" id="newDutyModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title"><i class="bi bi-phone-vibrate me-2 text-info"></i>Assign Duty & Dispatch Mobile SMS</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="dutyForm">
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Shift Name</label>
+                            <input type="text" id="shiftName" class="form-control" placeholder="e.g. Day Patrol Sector Alpha" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Select Personnel / Guard (SMS Recipient)</label>
+                            <select id="dutyUser" class="form-select">
+                                <option th:each="u : ${users}" th:value="${u.userId}" th:text="${u.name} + ' (' + ${u.phoneNumber} + ')'"></option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Station In-Charge Assigning Duty</label>
+                            <select id="stationInChargeUser" class="form-select">
+                                <option th:each="u : ${allUsers}" th:value="${u.userId}" th:text="${u.name} + ' (' + ${u.role} + ')'" th:selected="${u.userId == activeUserId}"></option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Checkpoints Roster (comma-separated)</label>
+                            <input type="text" id="checkpointsList" class="form-control" value="chk-101,chk-102,chk-103" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="saveDutyAssignment()">
+                        <i class="bi bi-send me-1"></i>Dispatch Duty & Send Mobile SMS
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script th:inline="javascript">
+function saveDutyAssignment() {
+  const shiftName = document.getElementById('shiftName').value;
+  const userId = document.getElementById('dutyUser').value;
+  const stationInChargeId = document.getElementById('stationInChargeUser').value;
+  const checkpointsList = document.getElementById('checkpointsList').value;
+
+  fetch('/api/duties', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      shiftName: shiftName,
+      userId: userId,
+      stationInChargeId: stationInChargeId,
+      checkpointsList: checkpointsList,
+      smsStatus: 'Delivered',
+      status: 'Assigned'
+    })
+  }).then(res => res.json())
+  .then(data => {
+    alert('🚨 MOBILE SMS DISPATCHED SUCCESSFUL!\nSent to personnel mobile phone.');
+    location.reload();
+  });
+}
+</script>
+</body>
+</html>

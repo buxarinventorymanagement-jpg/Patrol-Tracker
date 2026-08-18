@@ -1,0 +1,65 @@
+package com.patroltracker.config;
+
+import com.patroltracker.model.*;
+import com.patroltracker.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.List;
+
+@Component
+public class DataInitializer implements CommandLineRunner {
+
+    @Autowired private UserRepository userRepository;
+    @Autowired private CheckpointRepository checkpointRepository;
+    @Autowired private DutyAllocationRepository dutyAllocationRepository;
+    @Autowired private ScanLogRepository scanLogRepository;
+    @Autowired private ArchiveLogRepository archiveLogRepository;
+
+    @Override
+    public void run(String... args) throws Exception {
+        if (userRepository.count() == 0) {
+            System.out.println(">>> Initializing Patrol Tracker Demo Seed Data with Login Credentials & SMS Contact Info...");
+
+            // Seed Users with Passwords & Mobile Numbers
+            userRepository.saveAll(List.of(
+                new User("usr-001", "Buxar Security Guard A", "Guard", "BG-9921", "guard123", "+91-9876543210", "On Patrol"),
+                new User("usr-002", "Officer Rahul Sharma", "Guard", "BG-1044", "guard123", "+91-9812345678", "Active"),
+                new User("usr-003", "Captain Anshuman Singh", "Supervisor", "BG-0001", "super123", "+91-9998887770", "Active"),
+                new User("Patrol Tracker", "Patrol Duty Monitor", "Patrol Duty Monitor", "ADM-8800", "BXRadmin123", "+91-9990001112", "Active")
+            ));
+
+            // Seed Checkpoints
+            checkpointRepository.saveAll(List.of(
+                new Checkpoint("chk-101", "Main Gate Entrance", "QR-GATE-MAIN-101", new BigDecimal("25.564700"), new BigDecimal("83.977700"), 30, "Inspect barrier gate lock, check visitor logbook"),
+                new Checkpoint("chk-102", "North Perimeter Fence", "QR-PERIM-NORTH-102", new BigDecimal("25.565800"), new BigDecimal("83.978500"), 45, "Check fence integrity and perimeter floodlights"),
+                new Checkpoint("chk-103", "Server & Control Room", "QR-SERVER-CTRL-103", new BigDecimal("25.564100"), new BigDecimal("83.976900"), 15, "Verify AC temperature and access authorization"),
+                new Checkpoint("chk-104", "Warehouse Building B", "QR-WH-BLDG-B-104", new BigDecimal("25.563500"), new BigDecimal("83.979100"), 60, "Inspect rear loading dock doors and fire extinguishers"),
+                new Checkpoint("chk-105", "Emergency South Exit", "QR-EMERG-SOUTH-105", new BigDecimal("25.562900"), new BigDecimal("83.977200"), 30, "Ensure exit path is unobstructed and panic bar functions")
+            ));
+
+            // Seed Duty Allocations
+            dutyAllocationRepository.saveAll(List.of(
+                new DutyAllocation("duty-801", "usr-001", "usr-003", "Day Shift - Sector Alpha", OffsetDateTime.now().minusHours(2), OffsetDateTime.now().plusHours(6), "chk-101,chk-102,chk-103,chk-104", "Delivered", "In Progress"),
+                new DutyAllocation("duty-802", "usr-002", "usr-003", "Night Watch - Sector Bravo", OffsetDateTime.now().plusHours(8), OffsetDateTime.now().plusHours(16), "chk-103,chk-104,chk-105", "Dispatched", "Assigned")
+            ));
+
+            // Seed Scan Logs
+            scanLogRepository.saveAll(List.of(
+                new ScanLog("scn-9001", "chk-101", "usr-001", "duty-801", "On-Time", new BigDecimal("25.564700"), new BigDecimal("83.977700"), "Gate clear, all visitor entries recorded"),
+                new ScanLog("scn-9002", "chk-102", "usr-001", "duty-801", "On-Time", new BigDecimal("25.565800"), new BigDecimal("83.978500"), "Perimeter lights checked. All normal."),
+                new ScanLog("scn-9003", "chk-103", "usr-001", "duty-801", "On-Time", new BigDecimal("25.564100"), new BigDecimal("83.976900"), "Server room AC running fine at 20C")
+            ));
+
+            // Seed Archive Logs
+            archiveLogRepository.saveAll(List.of(
+                new ArchiveLog("arc-501", "duty-790", "{\"complianceRate\": 100, \"totalScans\": 8, \"missedScans\": 0, \"incidents\": 0}", "[{\"scanId\": \"scn-8801\", \"checkpoint\": \"Main Gate\", \"time\": \"Yesterday 18:00\"}]")
+            ));
+
+            System.out.println(">>> Demo Seed Data Initialized Successfully!");
+        }
+    }
+}

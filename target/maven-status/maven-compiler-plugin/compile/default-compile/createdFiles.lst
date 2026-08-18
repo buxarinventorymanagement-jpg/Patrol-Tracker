@@ -1,0 +1,16 @@
+com\patroltracker\controller\PatrolApiController.class
+com\patroltracker\controller\PatrolWebController.class
+com\patroltracker\repository\DutyAllocationRepository.class
+com\patroltracker\model\ScanLog.class
+com\patroltracker\repository\UserRepository.class
+com\patroltracker\config\DataInitializer.class
+com\patroltracker\service\PatrolService.class
+com\patroltracker\repository\ScanLogRepository.class
+com\patroltracker\repository\CheckpointRepository.class
+com\patroltracker\model\User.class
+com\patroltracker\service\NotificationService.class
+com\patroltracker\model\Checkpoint.class
+com\patroltracker\PatrolTrackerApplication.class
+com\patroltracker\model\ArchiveLog.class
+com\patroltracker\model\DutyAllocation.class
+com\patroltracker\repository\ArchiveLogRepository.class

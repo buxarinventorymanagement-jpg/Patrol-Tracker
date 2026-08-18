@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout(content, title)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' - Patrol Tracker Portal'">Patrol Tracker Portal</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+
+    <div class="app-viewport">
+        <!-- Role Banner -->
+        <div th:if="${isAdmin}" class="bg-danger text-white text-center py-1 px-3 small fw-bold">
+            <i class="bi bi-shield-lock-fill me-1"></i>👑 PATROL DUTY MONITOR MODE — Viewing All Users' System Data
+        </div>
+        <div th:if="${!isAdmin}" class="bg-info text-dark text-center py-1 px-3 small fw-bold">
+            <i class="bi bi-person-fill me-1"></i>👤 GUARD MODE — Scoped to Personal Patrol Data Only
+        </div>
+
+        <!-- Top Website Navigation Navbar Header -->
+        <header class="app-header">
+            <a th:href="@{/scan-logs(activeUser=${activeUserId})}" class="brand-badge">
+                <div class="brand-icon">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <span>PATROL TRACKER PORTAL</span>
+            </a>
+
+            <!-- Header Website Links -->
+            <nav class="header-nav d-none d-md-flex">
+                <a th:href="@{/scan-logs(activeUser=${activeUserId})}" class="nav-link-item" th:classappend="${activeTab == 'scan-logs' ? 'active' : ''}">
+                    <i class="bi bi-qr-code-scan"></i>
+                    <span>Scan Logs</span>
+                </a>
+                <a th:href="@{/duty(activeUser=${activeUserId})}" class="nav-link-item" th:classappend="${activeTab == 'duty' ? 'active' : ''}">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Duty Allocation</span>
+                </a>
+                <a th:href="@{/map(activeUser=${activeUserId})}" class="nav-link-item" th:classappend="${activeTab == 'map' ? 'active' : ''}">
+                    <i class="bi bi-geo-alt"></i>
+                    <span>Map Location</span>
+                </a>
+                <a th:href="@{/checkpoints(activeUser=${activeUserId})}" class="nav-link-item" th:classappend="${activeTab == 'checkpoints' ? 'active' : ''}">
+                    <i class="bi bi-pin-map"></i>
+                    <span>Checkpoints</span>
+                </a>
+                <a th:href="@{/users(activeUser=${activeUserId})}" class="nav-link-item" th:classappend="${activeTab == 'user' ? 'active' : ''}">
+                    <i class="bi bi-person-badge"></i>
+                    <span>Users</span>
+                </a>
+                <a th:href="@{/archive(activeUser=${activeUserId})}" class="nav-link-item" th:classappend="${activeTab == 'archive' ? 'active' : ''}">
+                    <i class="bi bi-archive"></i>
+                    <span>Archive Reports</span>
+                </a>
+            </nav>
+
+            <!-- User Profile & Sign Out Button -->
+            <div class="user-controls">
+                <div class="user-selector d-none d-sm-block">
+                    <select id="activeUserSelect" class="form-select form-select-sm" title="Active Guard Profile">
+                        <option th:each="u : ${allUsers}" 
+                                th:value="${u.userId}" 
+                                th:text="${u.name} + ' (' + ${u.role} + ')'"
+                                th:selected="${u.userId == activeUserId}">
+                            Security Guard
+                        </option>
+                    </select>
+                </div>
+
+                <a th:href="@{/logout}" class="btn btn-outline-danger btn-sm rounded-pill px-3" title="Sign Out of Patrol Tracker">
+                    <i class="bi bi-box-arrow-right me-1"></i>Sign Out
+                </a>
+            </div>
+        </header>
+
+        <!-- Mobile View Navigation Bar (Fallback for small screens) -->
+        <div class="bg-dark p-2 border-bottom border-secondary d-md-none text-center">
+            <div class="d-flex justify-content-around">
+                <a th:href="@{/scan-logs(activeUser=${activeUserId})}" class="text-light small text-decoration-none"><i class="bi bi-qr-code-scan d-block"></i>Scans</a>
+                <a th:href="@{/duty(activeUser=${activeUserId})}" class="text-light small text-decoration-none"><i class="bi bi-calendar-check d-block"></i>Duty</a>
+                <a th:href="@{/map(activeUser=${activeUserId})}" class="text-light small text-decoration-none"><i class="bi bi-geo-alt d-block"></i>Map</a>
+                <a th:href="@{/checkpoints(activeUser=${activeUserId})}" class="text-light small text-decoration-none"><i class="bi bi-pin-map d-block"></i>Points</a>
+                <a th:href="@{/users(activeUser=${activeUserId})}" class="text-light small text-decoration-none"><i class="bi bi-person-badge d-block"></i>Users</a>
+                <a th:href="@{/archive(activeUser=${activeUserId})}" class="text-light small text-decoration-none"><i class="bi bi-archive d-block"></i>Archive</a>
+            </div>
+        </div>
+
+        <!-- Main Dynamic View Content -->
+        <main class="app-content">
+            <div th:replace="${content}"></div>
+        </main>
+    </div>
+
+    <!-- JS Bundles -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script th:src="@{/js/app.js}"></script>
+</body>
+</html>

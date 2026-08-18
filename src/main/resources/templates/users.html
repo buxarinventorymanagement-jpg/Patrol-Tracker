@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::div.content-wrapper}, 'User Management')}">
+<body>
+<div class="content-wrapper">
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h5 class="m-0"><i class="bi bi-person-badge text-info me-2"></i>User & Guard Accounts</h5>
+            <small class="text-muted">Admin credentials & mobile contact directory</small>
+        </div>
+        <button th:if="${isAdmin}" class="btn btn-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#newUserModal">
+            <i class="bi bi-person-plus me-1"></i>Create User Account
+        </button>
+    </div>
+
+    <!-- User Table / Grid -->
+    <div class="row g-3">
+        <div th:each="u : ${users}" class="col-12">
+            <div class="card bg-dark border-secondary p-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar bg-secondary text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width:42px; height:42px;">
+                            <i class="bi bi-person-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="m-0 text-light fw-bold" th:text="${u.name}">Guard Name</h6>
+                            <div class="small text-muted" th:text="'User ID: ' + ${u.userId} + ' | Badge: ' + ${u.badgeNumber}">usr-001</div>
+                            <div class="small text-info"><i class="bi bi-phone me-1"></i><span th:text="${u.phoneNumber}">+91-9876543210</span></div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span th:if="${u.role == 'Guard'}" class="badge bg-info text-dark">Guard</span>
+                        <span th:if="${u.role == 'Supervisor'}" class="badge bg-warning text-dark">Station In-charge</span>
+                        <span th:if="${u.role == 'Patrol Duty Monitor' or u.role == 'Admin'}" class="badge bg-danger">Patrol Duty Monitor</span>
+                        <div class="small text-emerald mt-1"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem;"></i><span th:text="${u.status}">Active</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New User Modal (Patrol Duty Monitor Account Creation) -->
+    <div class="modal fade" id="newUserModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title"><i class="bi bi-person-plus me-2 text-info"></i>Create Personnel User Account</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-bold">Custom Username (User ID / Login Username)</label>
+                            <input type="text" id="newUserId" class="form-control" placeholder="e.g. officer_arjun or guard_ramesh" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-bold">Custom Login Password</label>
+                            <input type="password" id="userPassword" class="form-control" placeholder="Set custom password (e.g. arjun@2026)" required value="password123">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-bold">Full Name</label>
+                            <input type="text" id="userName" class="form-control" placeholder="e.g. Officer Arjun Kumar" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-bold">Mobile Phone Number (For SMS Duty Alerts)</label>
+                            <input type="text" id="userPhone" class="form-control" value="+91-9876543210" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-bold">Badge Number</label>
+                            <input type="text" id="userBadge" class="form-control" placeholder="e.g. BG-5510" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-bold">Role Assignment</label>
+                            <select id="userRole" class="form-select">
+                                <option value="Guard">Guard / Patrol Personnel</option>
+                                <option value="Supervisor">Station In-Charge (Supervisor)</option>
+                                <option value="Patrol Duty Monitor">Patrol Duty Monitor (Admin)</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="saveUser()">Create Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script th:inline="javascript">
+function saveUser() {
+  const userId = document.getElementById('newUserId').value;
+  const name = document.getElementById('userName').value;
+  const phone = document.getElementById('userPhone').value;
+  const badgeNumber = document.getElementById('userBadge').value;
+  const password = document.getElementById('userPassword').value;
+  const role = document.getElementById('userRole').value;
+
+  fetch('/api/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: userId,
+      name: name,
+      phoneNumber: phone,
+      badgeNumber: badgeNumber,
+      password: password,
+      role: role,
+      status: 'Active'
+    })
+  }).then(() => location.reload());
+}
+</script>
+</body>
+</html>
