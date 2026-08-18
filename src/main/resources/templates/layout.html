@@ -120,12 +120,12 @@
     <div class="modal fade" id="headerEditModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white border-warning">
-                <div class="modal-header border-warning">
-                    <h5 class="modal-title fw-bold text-white"><i class="bi bi-pencil-square me-2 text-warning"></i>Edit Admin / Officer Name</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="headerEditForm">
+                <form id="headerEditForm" onsubmit="event.preventDefault(); saveHeaderAdminName(); return false;">
+                    <div class="modal-header border-warning">
+                        <h5 class="modal-title fw-bold text-white"><i class="bi bi-pencil-square me-2 text-warning"></i>Edit Admin / Officer Name</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
                         <input type="hidden" id="hdrUserId">
                         <input type="hidden" id="hdrRole">
                         <div class="mb-3">
@@ -144,14 +144,14 @@
                             <label class="form-label small text-secondary fw-bold">Police Badge Number</label>
                             <input type="text" id="hdrBadge" class="form-control" placeholder="e.g. SP-0001" required>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-warning">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-warning btn-sm fw-bold px-3 shadow text-dark" onclick="saveHeaderAdminName()">
-                        <i class="bi bi-check-circle-fill me-1"></i>Save Name Changes
-                    </button>
-                </div>
+                    </div>
+                    <div class="modal-footer border-warning">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="hdrSubmitBtn" class="btn btn-warning btn-sm fw-bold px-3 shadow text-dark">
+                            <i class="bi bi-check-circle-fill me-1"></i>Save Name Changes
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

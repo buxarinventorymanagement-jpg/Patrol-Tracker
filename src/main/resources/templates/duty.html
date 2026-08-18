@@ -73,12 +73,12 @@
     <div class="modal fade" id="newDutyModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white border-secondary">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title fw-bold text-white"><i class="bi bi-phone-vibrate me-2 text-info"></i>Assign Duty & Dispatch Mobile/WhatsApp Alert</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="dutyForm">
+                <form id="dutyForm" onsubmit="event.preventDefault(); saveDutyAssignment(false); return false;">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title fw-bold text-white"><i class="bi bi-phone-vibrate me-2 text-info"></i>Assign Duty & Dispatch Mobile/WhatsApp Alert</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label small text-secondary fw-bold">Shift Name / Sector Title</label>
                             <input type="text" id="shiftName" class="form-control" placeholder="Enter Shift Name (e.g. Day Patrol Sector Alpha)" required>
@@ -118,17 +118,17 @@
                                 </div>
                             </div>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-secondary">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary btn-sm fw-bold px-3" onclick="saveDutyAssignment(false)">
-                        <i class="bi bi-send-fill me-1"></i>Dispatch Mobile SMS
-                    </button>
-                    <button type="button" class="btn btn-success btn-sm fw-bold px-3 shadow" onclick="saveDutyAssignment(true)">
-                        <i class="bi bi-whatsapp me-1"></i>Dispatch Duty via WhatsApp (🟢)
-                    </button>
-                </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary btn-sm fw-bold px-3" onclick="saveDutyAssignment(false)">
+                            <i class="bi bi-send-fill me-1"></i>Dispatch Mobile SMS
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm fw-bold px-3 shadow" onclick="saveDutyAssignment(true)">
+                            <i class="bi bi-whatsapp me-1"></i>Dispatch Duty via WhatsApp (🟢)
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

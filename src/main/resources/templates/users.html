@@ -74,12 +74,12 @@
     <div th:if="${isSPAdmin}" class="modal fade" id="newShoModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white border-danger">
-                <div class="modal-header border-danger">
-                    <h5 class="modal-title fw-bold text-white"><i class="bi bi-shield-lock-fill me-2 text-danger"></i>Register Station House Officer (SHO) — SP Admin Access</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="shoForm" onsubmit="event.preventDefault(); saveShoUser(); return false;">
+                <form id="shoForm" onsubmit="event.preventDefault(); saveShoUser(); return false;">
+                    <div class="modal-header border-danger">
+                        <h5 class="modal-title fw-bold text-white"><i class="bi bi-shield-lock-fill me-2 text-danger"></i>Register Station House Officer (SHO) — SP Admin Access</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
                         <div class="alert alert-danger py-2 small fw-bold mb-3">
                             <i class="bi bi-info-circle-fill me-1"></i>As Superintendent of Police (SP Admin), you are creating a Station House Officer (SHO) with Station In-Charge authority to manage police staff & dispatch WhatsApp duties.
                         </div>
@@ -107,14 +107,14 @@
                             <label class="form-label small text-secondary fw-bold">Login Password</label>
                             <input type="password" id="shoPassword" class="form-control" placeholder="Enter login password" required>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-danger">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger btn-sm fw-bold px-3 shadow" onclick="saveShoUser()">
-                        <i class="bi bi-shield-check me-1"></i>Register SHO User
-                    </button>
-                </div>
+                    </div>
+                    <div class="modal-footer border-danger">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="shoSubmitBtn" class="btn btn-danger btn-sm fw-bold px-3 shadow">
+                            <i class="bi bi-shield-check me-1"></i>Register SHO User
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -123,12 +123,12 @@
     <div th:if="${isSHO}" class="modal fade" id="newUserModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white border-secondary">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title fw-bold text-white"><i class="bi bi-person-plus-fill me-2 text-info"></i>Add Police Station Staff Member</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="userForm" onsubmit="event.preventDefault(); saveStaffUser(); return false;">
+                <form id="userForm" onsubmit="event.preventDefault(); saveStaffUser(); return false;">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title fw-bold text-white"><i class="bi bi-person-plus-fill me-2 text-info"></i>Add Police Station Staff Member</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label small text-secondary fw-bold">Name</label>
                             <input type="text" id="userName" class="form-control" placeholder="e.g. Constable Ramesh Kumar" required>
@@ -164,14 +164,14 @@
                             <label class="form-label small text-secondary fw-bold">Login Password</label>
                             <input type="password" id="userPassword" class="form-control" placeholder="Enter login password" required>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-secondary">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary btn-sm fw-bold px-3" onclick="saveStaffUser()">
-                        <i class="bi bi-check-circle-fill me-1"></i>Register Staff Member
-                    </button>
-                </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="staffSubmitBtn" class="btn btn-primary btn-sm fw-bold px-3">
+                            <i class="bi bi-check-circle-fill me-1"></i>Register Staff Member
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -180,12 +180,12 @@
     <div class="modal fade" id="editOfficerModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white border-warning">
-                <div class="modal-header border-warning">
-                    <h5 class="modal-title fw-bold text-white"><i class="bi bi-pencil-square me-2 text-warning"></i>Edit Officer Profile / Admin Name</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editOfficerForm" onsubmit="event.preventDefault(); saveEditedUser(); return false;">
+                <form id="editOfficerForm" onsubmit="event.preventDefault(); saveEditedUser(); return false;">
+                    <div class="modal-header border-warning">
+                        <h5 class="modal-title fw-bold text-white"><i class="bi bi-pencil-square me-2 text-warning"></i>Edit Officer Profile / Admin Name</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
                         <input type="hidden" id="editUserId">
                         <input type="hidden" id="editRole">
                         <div class="mb-3">
@@ -208,14 +208,14 @@
                             <label class="form-label small text-secondary fw-bold">Login Password</label>
                             <input type="password" id="editPassword" class="form-control" placeholder="Enter new password (optional)">
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-warning">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-warning btn-sm fw-bold px-3 shadow text-dark" onclick="saveEditedUser()">
-                        <i class="bi bi-check-circle-fill me-1"></i>Save Profile Changes
-                    </button>
-                </div>
+                    </div>
+                    <div class="modal-footer border-warning">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="editSubmitBtn" class="btn btn-warning btn-sm fw-bold px-3 shadow text-dark">
+                            <i class="bi bi-check-circle-fill me-1"></i>Save Profile Changes
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -256,10 +256,16 @@ function saveEditedUser() {
   const badgeNumber = document.getElementById('editBadge').value.trim();
   const password = document.getElementById('editPassword').value;
   const role = document.getElementById('editRole').value;
+  const submitBtn = document.getElementById('editSubmitBtn');
 
   if (!name || !phone) {
     alert('Please enter a valid Name and Mobile Number!');
     return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
   }
 
   fetch('/api/users', {
@@ -278,9 +284,13 @@ function saveEditedUser() {
   }).then(res => res.json())
   .then(data => {
     alert('✓ OFFICER PROFILE UPDATED SUCCESSFULLY!\nName: ' + name);
-    location.reload();
+    window.location.reload();
   }).catch(err => {
     alert('Error updating profile: ' + err);
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Save Profile Changes';
+    }
   });
 }
 
@@ -293,10 +303,16 @@ function saveShoUser() {
   const phone = document.getElementById('shoPhone').value.trim();
   const badgeNumber = document.getElementById('shoBadge').value.trim();
   const password = document.getElementById('shoPassword').value;
+  const submitBtn = document.getElementById('shoSubmitBtn');
 
   if (!name || !phone || !badgeNumber) {
     alert('Please complete all required fields (Name, Mobile Phone, and Badge Number)!');
     return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Registering...';
   }
 
   fetch('/api/users', {
@@ -319,9 +335,13 @@ function saveShoUser() {
     return res.json();
   }).then(data => {
     alert('✓ STATION HOUSE OFFICER (SHO) SAVED SUCCESSFULLY!\nName: ' + name + '\nRank: ' + designation + '\nMobile: ' + phone + '\nBadge: ' + badgeNumber);
-    location.reload();
+    window.location.reload();
   }).catch(err => {
     alert('❌ ERROR SAVING SHO USER: ' + err.message);
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Register SHO User';
+    }
   });
 }
 
@@ -333,6 +353,7 @@ function saveStaffUser() {
   const phone = document.getElementById('userPhone').value.trim();
   const badgeNumber = document.getElementById('userBadge').value.trim();
   const password = document.getElementById('userPassword').value;
+  const submitBtn = document.getElementById('staffSubmitBtn');
 
   if (!name || !phone || !badgeNumber) {
     alert('Please complete all required fields (Name, Mobile Phone, and Badge Number)!');
@@ -341,6 +362,11 @@ function saveStaffUser() {
   if (!designation) {
     alert('Please select an Official Rank / Designation!');
     return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Registering...';
   }
 
   fetch('/api/users', {
@@ -363,9 +389,13 @@ function saveStaffUser() {
     return res.json();
   }).then(data => {
     alert('✓ POLICE STAFF MEMBER SAVED SUCCESSFULLY!\nName: ' + name + '\nRank: ' + designation + '\nMobile: ' + phone);
-    location.reload();
+    window.location.reload();
   }).catch(err => {
     alert('❌ ERROR SAVING STAFF MEMBER: ' + err.message);
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Register Staff Member';
+    }
   });
 }
 

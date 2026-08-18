@@ -59,12 +59,12 @@
     <div class="modal fade" id="newCheckpointModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title"><i class="bi bi-pin-map me-2 text-info"></i>Add Patrol Checkpoint</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="checkpointForm">
+                <form id="checkpointForm" onsubmit="event.preventDefault(); saveCheckpoint(); return false;">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title"><i class="bi bi-pin-map me-2 text-info"></i>Add Patrol Checkpoint</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label small text-muted">Checkpoint Name</label>
                             <input type="text" id="chkName" class="form-control" placeholder="e.g. Roof East Tower" required>
@@ -91,12 +91,12 @@
                             <label class="form-label small text-muted">Inspection Instructions</label>
                             <textarea id="chkInstructions" class="form-control" rows="2" placeholder="e.g. Verify locks and fire doors..."></textarea>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-secondary">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="saveCheckpoint()">Save Checkpoint</button>
-                </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="chkSubmitBtn" class="btn btn-primary btn-sm">Save Checkpoint</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
