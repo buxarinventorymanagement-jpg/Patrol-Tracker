@@ -20,16 +20,24 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired private ArchiveLogRepository archiveLogRepository;
 
     @Override
+    @SuppressWarnings("null")
     public void run(String... args) throws Exception {
+        // Migration: Remove any occurrence of Anshuman Singh from existing database records
+        userRepository.findAll().forEach(u -> {
+            if (u.getName() != null && u.getName().toLowerCase().contains("anshuman")) {
+                u.setName("Inspector Vikram Singh");
+                userRepository.save(u);
+            }
+        });
+
         if (userRepository.count() == 0) {
             System.out.println(">>> Initializing Patrol Tracker Demo Seed Data with Login Credentials & SMS Contact Info...");
 
-            // Seed Users with Passwords & Mobile Numbers
+            // Seed Initial Clean Command Accounts (SP Admin & SHO)
             userRepository.saveAll(List.of(
-                new User("usr-001", "Buxar Security Guard A", "Guard", "BG-9921", "guard123", "+91-9876543210", "On Patrol"),
-                new User("usr-002", "Officer Rahul Sharma", "Guard", "BG-1044", "guard123", "+91-9812345678", "Active"),
-                new User("usr-003", "Captain Anshuman Singh", "Supervisor", "BG-0001", "super123", "+91-9998887770", "Active"),
-                new User("Patrol Tracker", "Patrol Duty Monitor", "Patrol Duty Monitor", "ADM-8800", "BXRadmin123", "+91-9990001112", "Active")
+                new User("sp-admin", "Dr. Rajesh Kumar, IPS", "Admin", "SP-0001", "sp123", "+91-9990001112", "Superintendent of Police (SP)", "Active"),
+                new User("usr-003", "Inspector Vikram Singh", "Supervisor", "SHO-1001", "super123", "+91-9998887770", "Station House Officer (SHO)", "Active"),
+                new User("Patrol Tracker", "District Police Monitor", "Admin", "ADM-8800", "BXRadmin123", "+91-9990001112", "Superintendent of Police (SP)", "Active")
             ));
 
             // Seed Checkpoints

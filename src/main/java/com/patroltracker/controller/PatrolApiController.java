@@ -16,6 +16,9 @@ public class PatrolApiController {
     @Autowired
     private PatrolService patrolService;
 
+    @Autowired
+    private com.patroltracker.service.NotificationService notificationService;
+
     // Login API
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> body) {
@@ -117,5 +120,11 @@ public class PatrolApiController {
             return ResponseEntity.ok(patrolService.getPatrolAnalyticsForUser(userId));
         }
         return ResponseEntity.ok(patrolService.getPatrolAnalytics());
+    }
+
+    // Dispatched Mobile SMS Logs
+    @GetMapping("/dispatched-sms")
+    public ResponseEntity<List<Map<String, String>>> getDispatchedSms() {
+        return ResponseEntity.ok(notificationService.getDispatchedSmsLogs());
     }
 }

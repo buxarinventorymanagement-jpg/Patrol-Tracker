@@ -10,6 +10,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,13 +24,21 @@ public class PatrolWebController {
 
     private String getAuthenticatedUserId(HttpSession session, String cookieUserId, String paramUserId) {
         if (paramUserId != null && !paramUserId.isBlank()) {
-            return paramUserId;
+            try {
+                return URLDecoder.decode(paramUserId, StandardCharsets.UTF_8);
+            } catch (Exception e) {
+                return paramUserId;
+            }
         }
         if (session.getAttribute("loggedInUserId") != null) {
             return (String) session.getAttribute("loggedInUserId");
         }
         if (cookieUserId != null && !cookieUserId.isBlank() && !"null".equalsIgnoreCase(cookieUserId)) {
-            return cookieUserId;
+            try {
+                return URLDecoder.decode(cookieUserId, StandardCharsets.UTF_8);
+            } catch (Exception e) {
+                return cookieUserId;
+            }
         }
         return null; // Unauthenticated
     }
@@ -37,11 +48,15 @@ public class PatrolWebController {
         User activeUser = patrolService.getUserById(activeUserId)
                 .orElseGet(() -> allUsers.isEmpty() ? new User("Patrol Tracker", "Patrol Duty Monitor", "Patrol Duty Monitor", "ADM-00", "BXRadmin123", "+91-9990001112", "Active") : allUsers.get(0));
 
-        boolean isAdmin = "Patrol Duty Monitor".equalsIgnoreCase(activeUser.getRole()) || "Admin".equalsIgnoreCase(activeUser.getRole());
-        boolean isStationInCharge = "Supervisor".equalsIgnoreCase(activeUser.getRole()) || isAdmin;
+        boolean isSPAdmin = activeUser.isSuperintendentOfPolice();
+        boolean isSHO = activeUser.isStationHouseOfficer();
+        boolean isAdmin = isSPAdmin;
+        boolean isStationInCharge = isSHO;
 
         model.addAttribute("activeUserId", activeUser.getUserId());
         model.addAttribute("activeUser", activeUser);
+        model.addAttribute("isSPAdmin", isSPAdmin);
+        model.addAttribute("isSHO", isSHO);
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("isStationInCharge", isStationInCharge);
         model.addAttribute("allUsers", allUsers);
@@ -69,12 +84,13 @@ public class PatrolWebController {
             session.setAttribute("loggedInUserId", user.getUserId());
             session.setAttribute("loggedInUserRole", user.getRole());
 
-            Cookie cookie = new Cookie("patrol_user", user.getUserId());
+            String encodedUserId = URLEncoder.encode(user.getUserId(), StandardCharsets.UTF_8);
+            Cookie cookie = new Cookie("patrol_user", encodedUserId);
             cookie.setPath("/");
             cookie.setMaxAge(864000);
             response.addCookie(cookie);
 
-            return "redirect:/scan-logs?activeUser=" + user.getUserId();
+            return "redirect:/scan-logs?activeUser=" + encodedUserId;
         } else {
             return "redirect:/login?error=1";
         }

@@ -8,10 +8,10 @@
   --bg-card: #151c2c;
   --bg-card-hover: #1e273b;
   --bg-header: #0f172a;
-  --border-color: rgba(255, 255, 255, 0.08);
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --border-color: rgba(255, 255, 255, 0.15);
+  --text-primary: #ffffff;
+  --text-secondary: #e2e8f0;
+  --text-muted: #cbd5e1;
   --accent-emerald: #10b981;
   --accent-cyan: #06b6d4;
   --accent-blue: #3b82f6;
@@ -20,7 +20,7 @@
   --radius-lg: 16px;
   --radius-md: 12px;
   --radius-sm: 8px;
-  --shadow-glow: 0 0 25px rgba(6, 182, 212, 0.15);
+  --shadow-glow: 0 0 25px rgba(6, 182, 212, 0.2);
 }
 
 body {
@@ -298,15 +298,188 @@ body {
   border-radius: var(--radius-lg);
 }
 
-.form-control, .form-select {
-  background: var(--bg-main);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
+.form-control, .form-select, select, input {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  font-weight: 500;
+}
+
+.form-control::placeholder {
+  color: #94a3b8 !important;
+}
+
+.form-label, label {
+  color: #e2e8f0 !important;
+  font-weight: 600;
 }
 
 .form-control:focus, .form-select:focus {
-  background: var(--bg-main);
-  color: var(--text-primary);
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.4) !important;
 }
+
+.btn-whatsapp {
+  background-color: #25d366;
+  color: #ffffff;
+  font-weight: 700;
+  border: none;
+}
+.btn-whatsapp:hover {
+  background-color: #128c7e;
+  color: #ffffff;
+}
+
+/* ====================================================================
+   DISTRICT STRATEGIC VIEW & GOOGLE MAPS CLASSIFICATION OVERLAY
+   ==================================================================== */
+
+.strategic-header-bar {
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+}
+
+.strategic-split-layout {
+  display: flex;
+  min-height: 580px;
+  background-color: var(--bg-main);
+  border-bottom: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .strategic-split-layout {
+    flex-direction: column;
+  }
+}
+
+.strategic-sidebar {
+  width: 270px;
+  flex-shrink: 0;
+  background: #111827 !important;
+}
+
+@media (max-width: 768px) {
+  .strategic-sidebar {
+    width: 100%;
+  }
+}
+
+.strategic-map-wrapper {
+  flex-grow: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+#patrol-map {
+  width: 100%;
+  height: 580px;
+  border-radius: 0;
+  border: none;
+  margin-bottom: 0;
+  box-shadow: none;
+}
+
+/* Right-Side Bottom Floating Classification Overlay Card */
+.classification-overlay-card {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1e293b;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  min-width: 175px;
+  font-family: 'Inter', -apple-system, sans-serif;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.classification-header {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.6px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 4px;
+}
+
+.classification-body {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.classification-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.class-color-box {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.class-color-box.serious-crime { background-color: #dc2626; }
+.class-color-box.dacoity { background-color: #ea580c; }
+.class-color-box.robbery { background-color: #d97706; }
+.class-color-box.accident { background-color: #0284c7; }
+.class-color-box.verified { background-color: #16a34a; }
+.class-color-box.others { background-color: #64748b; }
+
+/* Custom Marker Cluster Pin Badges */
+.custom-cluster-icon {
+  background-color: #22c55e;
+  color: #ffffff;
+  font-weight: 800;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
+  border: 2px solid #ffffff;
+  font-size: 0.85rem;
+}
+
+.custom-cluster-icon.gray {
+  background-color: #64748b;
+  box-shadow: 0 0 12px rgba(100, 116, 139, 0.6);
+}
+
+.district-summary-card {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.summary-item-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+}
+.summary-item-row:last-child {
+  border-bottom: none;
+}
+
+.text-cyan {
+  color: var(--accent-cyan) !important;
+}
+
+.chk-name-input:checked {
+  background-color: var(--accent-emerald);
+  border-color: var(--accent-emerald);
+}
+

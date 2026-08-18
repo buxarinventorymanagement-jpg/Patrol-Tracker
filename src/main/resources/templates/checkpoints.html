@@ -134,12 +134,17 @@ function showQRModal(qrData, name) {
 }
 
 function saveCheckpoint() {
-  const name = document.getElementById('chkName').value;
-  const qrCodeData = document.getElementById('chkQr').value;
+  const name = document.getElementById('chkName').value.trim();
+  const qrCodeData = document.getElementById('chkQr').value.trim();
   const lat = document.getElementById('chkLat').value;
   const lng = document.getElementById('chkLng').value;
   const interval = document.getElementById('chkInterval').value;
-  const instructions = document.getElementById('chkInstructions').value;
+  const instructions = document.getElementById('chkInstructions').value.trim();
+
+  if (!name || !qrCodeData || !lat || !lng) {
+    alert('Please complete all required fields (Name, QR Code Data, Latitude, Longitude)!');
+    return;
+  }
 
   fetch('/api/checkpoints', {
     method: 'POST',
@@ -149,10 +154,20 @@ function saveCheckpoint() {
       qrCodeData: qrCodeData,
       latitude: lat,
       longitude: lng,
-      scanIntervalMinutes: interval,
+      scanIntervalMinutes: interval || 30,
       instructions: instructions
     })
-  }).then(() => location.reload());
+  }).then(res => {
+    if (!res.ok) {
+      return res.text().then(text => { throw new Error(text || 'Server error saving checkpoint'); });
+    }
+    return res.json();
+  }).then(data => {
+    alert('✓ CHECKPOINT SAVED SUCCESSFULLY!\nName: ' + name + '\nQR Code: ' + qrCodeData);
+    location.reload();
+  }).catch(err => {
+    alert('❌ ERROR SAVING CHECKPOINT: ' + err.message);
+  });
 }
 </script>
 </body>

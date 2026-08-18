@@ -10,17 +10,22 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
     <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
 
     <div class="app-viewport">
         <!-- Role Banner -->
-        <div th:if="${isAdmin}" class="bg-danger text-white text-center py-1 px-3 small fw-bold">
-            <i class="bi bi-shield-lock-fill me-1"></i>👑 PATROL DUTY MONITOR MODE — Viewing All Users' System Data
+        <div th:if="${isSPAdmin}" class="bg-danger text-white text-center py-1 px-3 small fw-bold">
+            <i class="bi bi-shield-lock-fill me-1"></i>🚔 SUPERINTENDENT OF POLICE (SP) ADMIN MODE — District Command & SHO Management
         </div>
-        <div th:if="${!isAdmin}" class="bg-info text-dark text-center py-1 px-3 small fw-bold">
-            <i class="bi bi-person-fill me-1"></i>👤 GUARD MODE — Scoped to Personal Patrol Data Only
+        <div th:if="${isSHO and !isSPAdmin}" class="bg-primary text-white text-center py-1 px-3 small fw-bold">
+            <i class="bi bi-shield-shaded me-1"></i>👮 STATION HOUSE OFFICER (SHO) MODE — Station Staff Management & WhatsApp Duty Allocation
+        </div>
+        <div th:if="${!isSHO}" class="bg-info text-dark text-center py-1 px-3 small fw-bold">
+            <i class="bi bi-person-fill me-1"></i>🛡️ POLICE STAFF MODE — Personal Duty Schedule & QR Checkpoint Scans
         </div>
 
         <!-- Top Website Navigation Navbar Header -->
@@ -61,7 +66,7 @@
             </nav>
 
             <!-- User Profile & Sign Out Button -->
-            <div class="user-controls">
+            <div class="user-controls d-flex align-items-center gap-2">
                 <div class="user-selector d-none d-sm-block">
                     <select id="activeUserSelect" class="form-select form-select-sm" title="Active Guard Profile">
                         <option th:each="u : ${allUsers}" 
@@ -72,6 +77,20 @@
                         </option>
                     </select>
                 </div>
+
+                <!-- Quick Edit Admin / Active Officer Name Button -->
+                <button type="button" class="btn btn-outline-warning btn-sm fw-bold d-flex align-items-center gap-1 shadow-sm" 
+                        th:data-id="${activeUser.userId}"
+                        th:data-name="${activeUser.name}"
+                        th:data-designation="${activeUser.designation}"
+                        th:data-phone="${activeUser.phoneNumber}"
+                        th:data-badge="${activeUser.badgeNumber}"
+                        th:data-role="${activeUser.role}"
+                        onclick="openHeaderEditModal(this)"
+                        title="Edit Admin / Officer Name">
+                    <i class="bi bi-pencil-square"></i>
+                    <span class="d-none d-lg-inline">Edit Name</span>
+                </button>
 
                 <a th:href="@{/logout}" class="btn btn-outline-danger btn-sm rounded-pill px-3" title="Sign Out of Patrol Tracker">
                     <i class="bi bi-box-arrow-right me-1"></i>Sign Out
@@ -97,10 +116,101 @@
         </main>
     </div>
 
+    <!-- Modal: Edit Admin / Active Officer Name (Header Access) -->
+    <div class="modal fade" id="headerEditModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border-warning">
+                <div class="modal-header border-warning">
+                    <h5 class="modal-title fw-bold text-white"><i class="bi bi-pencil-square me-2 text-warning"></i>Edit Admin / Officer Name</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="headerEditForm">
+                        <input type="hidden" id="hdrUserId">
+                        <input type="hidden" id="hdrRole">
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary fw-bold">Name</label>
+                            <input type="text" id="hdrName" class="form-control" placeholder="e.g. Officer Name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary fw-bold">Official Rank / Designation</label>
+                            <input type="text" id="hdrDesignation" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary fw-bold">Mobile Phone Number</label>
+                            <input type="text" id="hdrPhone" class="form-control" placeholder="+91-9990001112" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary fw-bold">Police Badge Number</label>
+                            <input type="text" id="hdrBadge" class="form-control" placeholder="e.g. SP-0001" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-warning">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning btn-sm fw-bold px-3 shadow text-dark" onclick="saveHeaderAdminName()">
+                        <i class="bi bi-check-circle-fill me-1"></i>Save Name Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JS Bundles -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet-heat@0.2.0/dist/leaflet-heat.js"></script>
     <script th:src="@{/js/app.js}"></script>
+
+    <script th:inline="javascript">
+    function openHeaderEditModal(btn) {
+      document.getElementById('hdrUserId').value = btn.getAttribute('data-id');
+      document.getElementById('hdrName').value = btn.getAttribute('data-name');
+      document.getElementById('hdrDesignation').value = btn.getAttribute('data-designation') || '';
+      document.getElementById('hdrPhone').value = btn.getAttribute('data-phone') || '';
+      document.getElementById('hdrBadge').value = btn.getAttribute('data-badge') || '';
+      document.getElementById('hdrRole').value = btn.getAttribute('data-role') || 'Admin';
+
+      const modal = new bootstrap.Modal(document.getElementById('headerEditModal'));
+      modal.show();
+    }
+
+    function saveHeaderAdminName() {
+      const userId = document.getElementById('hdrUserId').value;
+      const name = document.getElementById('hdrName').value.trim();
+      const designation = document.getElementById('hdrDesignation').value.trim();
+      const phone = document.getElementById('hdrPhone').value.trim();
+      const badgeNumber = document.getElementById('hdrBadge').value.trim();
+      const role = document.getElementById('hdrRole').value;
+
+      if (!name) {
+        alert('Please enter a valid Admin Name!');
+        return;
+      }
+
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userId,
+          name: name,
+          designation: designation,
+          phoneNumber: phone,
+          badgeNumber: badgeNumber,
+          password: 'sp123',
+          role: role,
+          status: 'Active'
+        })
+      }).then(res => res.json())
+      .then(data => {
+        alert('✓ ADMIN NAME UPDATED SUCCESSFULLY!\nNew Name: ' + name);
+        location.reload();
+      }).catch(err => {
+        alert('Error updating Admin name: ' + err);
+      });
+    }
+    </script>
 </body>
 </html>

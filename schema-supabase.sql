@@ -70,7 +70,7 @@ INSERT INTO user_table (user_id, name, role, badge_number, status)
 VALUES 
   ('usr-001', 'Buxar Security Guard A', 'Guard', 'BG-9921', 'On Patrol'),
   ('usr-002', 'Officer Rahul Sharma', 'Guard', 'BG-1044', 'Active'),
-  ('usr-003', 'Captain Anshuman Singh', 'Supervisor', 'BG-0001', 'Active'),
+  ('usr-003', 'Inspector Vikram Singh', 'Supervisor', 'BG-0001', 'Active'),
   ('usr-004', 'Admin Controller', 'Admin', 'ADM-8800', 'Active')
 ON CONFLICT (user_id) DO NOTHING;
 

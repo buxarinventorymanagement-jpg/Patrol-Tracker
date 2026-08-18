@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS user_table (
     name VARCHAR(255) NOT NULL,
     role VARCHAR(50) NOT NULL DEFAULT 'Guard',
     badge_number VARCHAR(50),
+    password VARCHAR(255) DEFAULT 'guard123',
+    phone_number VARCHAR(50) DEFAULT '+91-9876543210',
+    designation VARCHAR(100) DEFAULT 'Constable (PC)',
     status VARCHAR(50) DEFAULT 'Active',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -27,10 +30,12 @@ CREATE TABLE IF NOT EXISTS checkpoints (
 CREATE TABLE IF NOT EXISTS duty_allocation (
     duty_id VARCHAR(64) PRIMARY KEY,
     user_id VARCHAR(64),
+    station_in_charge_id VARCHAR(64),
     shift_name VARCHAR(100) NOT NULL,
     start_time TIMESTAMP WITH TIME ZONE,
     end_time TIMESTAMP WITH TIME ZONE,
     checkpoints_list TEXT NOT NULL,
+    sms_status VARCHAR(50) DEFAULT 'Dispatched',
     status VARCHAR(50) DEFAULT 'Assigned',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

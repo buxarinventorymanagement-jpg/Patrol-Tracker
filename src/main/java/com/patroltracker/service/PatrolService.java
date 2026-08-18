@@ -11,6 +11,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 @Service
+@SuppressWarnings("null")
 public class PatrolService {
 
     @Autowired private UserRepository userRepository;
@@ -23,7 +24,13 @@ public class PatrolService {
     // Authentication Method (Admin & User Login)
     public Optional<User> authenticate(String userId, String password) {
         if (userId == null || password == null) return Optional.empty();
-        Optional<User> userOpt = userRepository.findById(userId.trim());
+        String trimmedId = userId.trim();
+        Optional<User> userOpt = userRepository.findById(trimmedId);
+        if (userOpt.isEmpty()) {
+            userOpt = userRepository.findAll().stream()
+                    .filter(u -> u.getBadgeNumber() != null && trimmedId.equalsIgnoreCase(u.getBadgeNumber().trim()))
+                    .findFirst();
+        }
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             if (password.equals(user.getPassword()) || "password123".equals(password) || "admin123".equals(password)) {
@@ -46,7 +53,25 @@ public class PatrolService {
         if (user.getUserId() == null || user.getUserId().isBlank()) {
             user.setUserId("usr-" + UUID.randomUUID().toString().substring(0, 8));
         }
-        return userRepository.save(user);
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            user.setPassword("guard123");
+        }
+        if (user.getStatus() == null || user.getStatus().isBlank()) {
+            user.setStatus("Active");
+        }
+        User saved = userRepository.save(user);
+
+        System.out.println("\n=======================================================");
+        System.out.println(" 💾 POLICE USER SAVED TO DATABASE ");
+        System.out.println(" ID:          " + saved.getUserId());
+        System.out.println(" NAME:        " + saved.getName());
+        System.out.println(" RANK:        " + saved.getDesignation());
+        System.out.println(" PHONE:       " + saved.getPhoneNumber());
+        System.out.println(" BADGE:       " + saved.getBadgeNumber());
+        System.out.println(" ROLE:        " + saved.getRole());
+        System.out.println("=======================================================\n");
+
+        return saved;
     }
 
     // Checkpoints Management
@@ -65,7 +90,16 @@ public class PatrolService {
         if (checkpoint.getQrCodeData() == null || checkpoint.getQrCodeData().isBlank()) {
             checkpoint.setQrCodeData("QR-" + checkpoint.getCheckpointId().toUpperCase());
         }
-        return checkpointRepository.save(checkpoint);
+        Checkpoint saved = checkpointRepository.save(checkpoint);
+
+        System.out.println("\n=======================================================");
+        System.out.println(" 💾 CHECKPOINT SAVED TO DATABASE ");
+        System.out.println(" ID:          " + saved.getCheckpointId());
+        System.out.println(" NAME:        " + saved.getName());
+        System.out.println(" QR CODE:     " + saved.getQrCodeData());
+        System.out.println("=======================================================\n");
+
+        return saved;
     }
 
     // Duty Allocation
@@ -89,11 +123,20 @@ public class PatrolService {
         }
         DutyAllocation savedDuty = dutyAllocationRepository.save(duty);
 
-        // Dispatch Mobile SMS Notification to Personnel
-        userRepository.findById(savedDuty.getUserId()).ifPresent(guard -> {
+        System.out.println("\n=======================================================");
+        System.out.println(" 💾 DUTY ALLOCATION SAVED TO DATABASE ");
+        System.out.println(" DUTY ID:     " + savedDuty.getDutyId());
+        System.out.println(" RECIPIENT:   " + savedDuty.getUserId());
+        System.out.println(" SHIFT:       " + savedDuty.getShiftName());
+        System.out.println(" CHECKPOINTS: " + savedDuty.getCheckpointsList());
+        System.out.println("=======================================================\n");
+
+        // Dispatch Mobile SMS & WhatsApp Notifications to Police Staff / Guard
+        userRepository.findById(savedDuty.getUserId()).ifPresent(staff -> {
             User stationInCharge = userRepository.findById(savedDuty.getStationInChargeId() != null ? savedDuty.getStationInChargeId() : "usr-003")
-                    .orElseGet(() -> new User("usr-003", "Station In-Charge", "Supervisor", "BG-0001", "Active"));
-            notificationService.sendDutyAssignmentSms(savedDuty, guard, stationInCharge);
+                    .orElseGet(() -> new User("usr-003", "Station In-Charge", "Supervisor", "BG-0001", "Station In-Charge (SHO)", "Active"));
+            notificationService.sendDutyAssignmentSms(savedDuty, staff, stationInCharge);
+            notificationService.sendWhatsAppDutyMessage(savedDuty, staff, stationInCharge);
         });
 
         return savedDuty;
@@ -141,18 +184,27 @@ public class PatrolService {
 
         scanLogRepository.save(log);
 
-        // Update user status if guard
+        // Update user status if guard & dispatch live GPS scan SMS alert
+        User guard = null;
         if (userId != null) {
-            userRepository.findById(userId).ifPresent(u -> {
-                u.setStatus("On Patrol");
-                userRepository.save(u);
-            });
+            Optional<User> guardOpt = userRepository.findById(userId);
+            if (guardOpt.isPresent()) {
+                guard = guardOpt.get();
+                guard.setStatus("On Patrol");
+                userRepository.save(guard);
+            }
         }
+
+        // Trigger Live Scan Mobile SMS & Map Visibility alert
+        Map<String, String> smsLog = notificationService.sendLiveScanGpsSms(guard, checkpoint, log.getLatitude(), log.getLongitude());
 
         response.put("success", true);
         response.put("message", "Checkpoint scanned successfully: " + checkpoint.getName());
         response.put("scanLog", log);
         response.put("checkpoint", checkpoint);
+        response.put("guardName", guard != null ? guard.getName() : "Security Guard");
+        response.put("liveGpsLocation", Map.of("latitude", log.getLatitude(), "longitude", log.getLongitude()));
+        response.put("smsMessage", smsLog.get("smsMessage"));
 
         return response;
     }
@@ -160,28 +212,39 @@ public class PatrolService {
     // Role-Based Data Scoping Methods (Admin vs Guard Self-Data Isolation)
 
     public boolean isAdmin(String userId) {
+        return isSuperintendentOfPolice(userId);
+    }
+
+    public boolean isSuperintendentOfPolice(String userId) {
         if (userId == null) return false;
         return userRepository.findById(userId)
-                .map(u -> "Patrol Duty Monitor".equalsIgnoreCase(u.getRole()) || "Admin".equalsIgnoreCase(u.getRole()))
+                .map(User::isSuperintendentOfPolice)
+                .orElse(false);
+    }
+
+    public boolean isStationHouseOfficer(String userId) {
+        if (userId == null) return false;
+        return userRepository.findById(userId)
+                .map(User::isStationHouseOfficer)
                 .orElse(false);
     }
 
     public List<ScanLog> getScanLogsForUser(String userId) {
-        if (isAdmin(userId)) {
+        if (isStationHouseOfficer(userId)) {
             return scanLogRepository.findAllByOrderByScanTimeDesc();
         }
         return scanLogRepository.findByUserIdOrderByScanTimeDesc(userId);
     }
 
     public List<DutyAllocation> getDutiesForUser(String userId) {
-        if (isAdmin(userId)) {
+        if (isStationHouseOfficer(userId)) {
             return dutyAllocationRepository.findAll();
         }
         return dutyAllocationRepository.findByUserId(userId);
     }
 
     public List<User> getUsersForUser(String userId) {
-        if (isAdmin(userId)) {
+        if (isStationHouseOfficer(userId)) {
             return userRepository.findAll();
         }
         return userRepository.findById(userId).map(List::of).orElseGet(Collections::emptyList);

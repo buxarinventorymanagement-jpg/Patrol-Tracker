@@ -1,37 +1,122 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::div.content-wrapper}, 'Map Location')}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::div.content-wrapper}, 'District Strategic View')}">
 <body>
-<div class="content-wrapper">
+<div class="content-wrapper p-0">
 
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <div>
-            <h5 class="m-0"><i class="bi bi-geo-alt text-info me-2"></i>Live Checkpoint Map</h5>
-            <small class="text-muted">Real-time GPS verification & scan status</small>
+    <!-- District Strategic View Top Header Bar -->
+    <div class="strategic-header-bar d-flex align-items-center justify-content-between px-3 py-2 bg-dark text-white border-bottom border-secondary">
+        <div class="d-flex align-items-center gap-2">
+            <h5 class="m-0 fw-bold text-white"><i class="bi bi-shield-shaded text-info me-2"></i>District Strategic View</h5>
         </div>
-        <span class="badge bg-success"><i class="bi bi-broadcast me-1"></i>Live Radar</span>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-light d-flex align-items-center gap-1" onclick="resetMapView()">
+                <i class="bi bi-house-door-fill"></i>
+                <span>Reset View</span>
+            </button>
+            <span class="badge bg-secondary font-monospace px-2 py-1 fs-6">Aug 2026</span>
+        </div>
     </div>
 
-    <!-- Map Color Legend -->
-    <div class="d-flex gap-2 mb-2 p-2 bg-dark rounded border border-secondary small text-light justify-content-around">
-        <div><i class="bi bi-circle-fill text-success me-1"></i><strong class="text-emerald">GREEN</strong>: Scanned Checkpoint</div>
-        <div><i class="bi bi-circle-fill text-warning me-1"></i><strong class="text-warning">AMBER</strong>: Pending Inspection</div>
-    </div>
-
-    <!-- Leaflet Map Container -->
-    <div id="patrol-map"></div>
-
-    <!-- Checkpoint Pins Legend & Status -->
-    <h6 class="text-secondary mb-2"><i class="bi bi-pin-map-fill me-2"></i>Checkpoints Verification Feed</h6>
-    <div class="list-group">
-        <div th:each="chk : ${checkpoints}" class="list-group-item bg-dark border-secondary text-light d-flex justify-content-between align-items-center mb-2 rounded">
-            <div>
-                <div class="d-flex align-items-center gap-2">
-                    <strong th:text="${chk.name}">Main Gate Entrance</strong>
-                    <span class="badge bg-success" style="font-size:0.65rem;"><i class="bi bi-check-all me-1"></i>VERIFIED GREEN</span>
+    <!-- Main Strategic Split Grid -->
+    <div class="strategic-split-layout">
+        
+        <!-- Left Sidebar: Refine Analysis, Layers & Tools, District Summary -->
+        <div class="strategic-sidebar p-3 bg-dark border-end border-secondary">
+            
+            <!-- Refine Analysis Section -->
+            <div class="mb-4">
+                <label class="sidebar-section-header text-uppercase fw-bold text-secondary mb-2" style="font-size:0.75rem; letter-spacing: 0.8px;">REFINE ANALYSIS</label>
+                <div class="input-group input-group-sm mb-2">
+                    <span class="input-group-text bg-white border-end-0 text-secondary"><i class="bi bi-search"></i></span>
+                    <input type="text" id="mapSearchInput" class="form-control border-start-0 ps-0 text-dark" placeholder="e.g. Murder, Theft, Gate..." onkeyup="filterMapAnalysis()">
                 </div>
-                <div class="small text-muted font-monospace" th:text="${chk.latitude} + ', ' + ${chk.longitude}">25.564700, 83.977700</div>
+                <button class="btn btn-primary btn-sm w-100 fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center gap-2" id="analysisCountBtn">
+                    <span id="analysisLoadedCount">10 Items</span> Loaded
+                </button>
             </div>
-            <span class="badge bg-info text-dark font-monospace" th:text="${chk.qrCodeData}">QR-CODE</span>
+
+            <!-- Layers & Tools Section -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="sidebar-section-header text-uppercase fw-bold text-secondary" style="font-size:0.75rem; letter-spacing: 0.8px;">LAYERS & TOOLS</span>
+                    <i class="bi bi-gear-fill text-secondary" style="font-size:0.85rem;"></i>
+                </div>
+                <div class="bg-dark-subtle p-2 rounded border border-secondary mb-2">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="chkIntensityHeatmap" onchange="toggleHeatmapLayer()">
+                        <label class="form-check-label text-light small fw-medium" for="chkIntensityHeatmap">Intensity Heatmap</label>
+                    </div>
+                    <div class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" id="chkEnableClustering" checked onchange="toggleClusteringLayer()">
+                        <label class="form-check-label text-light small fw-medium" for="chkEnableClustering">Enable Clustering</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- District Summary Section -->
+            <div>
+                <label class="sidebar-section-header text-uppercase fw-bold text-secondary mb-2" style="font-size:0.75rem; letter-spacing: 0.8px;">DISTRICT SUMMARY</label>
+                <div id="districtSummaryContainer" class="district-summary-card p-2 rounded bg-dark-subtle border border-secondary small text-light">
+                    <!-- Loaded dynamically via app.js -->
+                    <div class="summary-line text-muted small">Loading strategic breakdown...</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Main Map Container -->
+        <div class="strategic-map-wrapper position-relative">
+            <!-- Google Maps Style Map -->
+            <div id="patrol-map"></div>
+
+            <!-- Floating Classification Overlay Card (Right Side Bottom) -->
+            <div class="classification-overlay-card">
+                <div class="classification-header">CLASSIFICATION</div>
+                <div class="classification-body">
+                    <div class="classification-item">
+                        <span class="class-color-box serious-crime"></span>
+                        <span class="class-label">Serious Crime / Riot</span>
+                    </div>
+                    <div class="classification-item">
+                        <span class="class-color-box dacoity"></span>
+                        <span class="class-label">Dacoity</span>
+                    </div>
+                    <div class="classification-item">
+                        <span class="class-color-box robbery"></span>
+                        <span class="class-label">Robbery</span>
+                    </div>
+                    <div class="classification-item">
+                        <span class="class-color-box accident"></span>
+                        <span class="class-label">Accident</span>
+                    </div>
+                    <div class="classification-item">
+                        <span class="class-color-box verified"></span>
+                        <span class="class-label">Verified Checkpoint</span>
+                    </div>
+                    <div class="classification-item">
+                        <span class="class-color-box others"></span>
+                        <span class="class-label">Others / Pending</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Checkpoint Pins Legend & Status Feed (Below Map) -->
+    <div class="p-3">
+        <h6 class="text-secondary mb-2"><i class="bi bi-pin-map-fill me-2"></i>Checkpoints & Incident Verification Feed</h6>
+        <div class="list-group">
+            <div th:each="chk : ${checkpoints}" class="list-group-item bg-dark border-secondary text-light d-flex justify-content-between align-items-center mb-2 rounded">
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <strong th:text="${chk.name}">Main Gate Entrance</strong>
+                        <span class="badge bg-success" style="font-size:0.65rem;"><i class="bi bi-check-all me-1"></i>VERIFIED GREEN</span>
+                    </div>
+                    <div class="small text-muted font-monospace" th:text="${chk.latitude} + ', ' + ${chk.longitude}">25.564700, 83.977700</div>
+                </div>
+                <span class="badge bg-info text-dark font-monospace" th:text="${chk.qrCodeData}">QR-CODE</span>
+            </div>
         </div>
     </div>
 
