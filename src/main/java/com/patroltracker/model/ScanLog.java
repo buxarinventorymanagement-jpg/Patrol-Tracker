@@ -36,6 +36,18 @@ public class ScanLog {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(name = "qr_id", length = 128)
+    private String qrId;
+
+    @Column(name = "thana_name", length = 128)
+    private String thanaName;
+
+    @Column(name = "photo_proof", columnDefinition = "TEXT")
+    private String photoProof;
+
+    @Column(name = "patrol_status", length = 128)
+    private String patrolStatus;
+
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
@@ -84,6 +96,18 @@ public class ScanLog {
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public String getQrId() { return qrId; }
+    public void setQrId(String qrId) { this.qrId = qrId; }
+
+    public String getThanaName() { return thanaName; }
+    public void setThanaName(String thanaName) { this.thanaName = thanaName; }
+
+    public String getPhotoProof() { return photoProof; }
+    public void setPhotoProof(String photoProof) { this.photoProof = photoProof; }
+
+    public String getPatrolStatus() { return patrolStatus; }
+    public void setPatrolStatus(String patrolStatus) { this.patrolStatus = patrolStatus; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }

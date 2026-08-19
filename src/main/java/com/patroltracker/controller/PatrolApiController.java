@@ -83,6 +83,12 @@ public class PatrolApiController {
         return ResponseEntity.ok(patrolService.getAllScanLogs());
     }
 
+    // Save new scan log
+    @PostMapping("/scan-logs")
+    public ResponseEntity<ScanLog> createScanLog(@RequestBody ScanLog scanLog) {
+        return ResponseEntity.ok(patrolService.saveScanLog(scanLog));
+    }
+
     // Get duties
     @GetMapping("/duties")
     public ResponseEntity<List<DutyAllocation>> getDuties(@RequestParam(name = "userId", required = false) String userId) {
@@ -111,6 +117,17 @@ public class PatrolApiController {
     @PostMapping("/users")
     public ResponseEntity<User> createUser(@RequestBody User user) {
         return ResponseEntity.ok(patrolService.saveUser(user));
+    }
+
+    // Delete user
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<Map<String, Object>> deleteUser(@PathVariable("userId") String userId) {
+        boolean deleted = patrolService.deleteUser(userId);
+        if (deleted) {
+            return ResponseEntity.ok(Map.of("success", true, "message", "User deleted successfully"));
+        } else {
+            return ResponseEntity.status(404).body(Map.of("success", false, "message", "User not found"));
+        }
     }
 
     // Analytics summary

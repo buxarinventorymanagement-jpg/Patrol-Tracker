@@ -25,40 +25,141 @@
 
     <!-- Desktop Side-by-Side Grid Container -->
     <div class="row g-4">
-        <!-- Left Column: Live QR Camera & Quick Triggers -->
+        <!-- Left Column: Scan Logs Form matching User Screenshot -->
         <div class="col-lg-6">
-            <div class="scanner-box">
-                <div id="qr-reader" class="scanner-video-container"></div>
-                <h5><i class="bi bi-camera-fill me-2 text-info"></i>QR Checkpoint Scanner</h5>
-                <p>Align physical checkpoint QR code in the camera frame or use test trigger buttons below.</p>
-                
-                <div class="input-group input-group-sm mb-3">
-                    <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-pencil-square"></i></span>
-                    <input type="text" id="scanNotesInput" class="form-control" placeholder="Optional inspection notes (e.g. Door locked, AC OK)...">
+            <div class="card bg-dark border-secondary p-3 shadow-lg rounded">
+                <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary pb-2">
+                    <h5 class="m-0 text-info fw-bold"><i class="bi bi-qr-code-scan me-2"></i>Scan Logs</h5>
+                    <button class="btn btn-sm btn-outline-secondary font-monospace" onclick="generatePageLogId()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>New ID
+                    </button>
                 </div>
 
-                <button class="btn btn-primary btn-sm rounded-pill px-4 mb-3" onclick="startCameraScanner()">
-                    <i class="bi bi-camera me-1"></i> Start Camera Scan
-                </button>
-
-                <!-- Quick Test Triggers -->
-                <div class="text-start mt-2">
-                    <small class="text-muted d-block mb-2 font-weight-bold">Quick Test QR Code Triggers:</small>
-                    <div class="quick-qr-list">
-                        <button class="quick-qr-btn" onclick="quickScan('QR-GATE-MAIN-101')">
-                            <i class="bi bi-qr-code me-1"></i>Main Gate Entrance
-                        </button>
-                        <button class="quick-qr-btn" onclick="quickScan('QR-PERIM-NORTH-102')">
-                            <i class="bi bi-qr-code me-1"></i>North Perimeter
-                        </button>
-                        <button class="quick-qr-btn" onclick="quickScan('QR-SERVER-CTRL-103')">
-                            <i class="bi bi-qr-code me-1"></i>Server Room
-                        </button>
-                        <button class="quick-qr-btn" onclick="quickScan('QR-WH-BLDG-B-104')">
-                            <i class="bi bi-qr-code me-1"></i>Warehouse B
-                        </button>
+                <form id="mainScanLogForm" onsubmit="submitMainScanLogForm(event)">
+                    
+                    <!-- Log_ID* -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">Log_ID<span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="pageLogId" class="form-control font-monospace" placeholder="78f97f69" required readonly>
+                            <button type="button" class="btn btn-outline-secondary" onclick="generatePageLogId()" title="Generate Random Log ID">
+                                <i class="bi bi-qr-code"></i>
+                            </button>
+                        </div>
                     </div>
-                </div>
+
+                    <!-- User_ID* (Showing Guard's Mobile / Phone Number) -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">User_ID<span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="pageUserId" class="form-control" placeholder="+91-9990001112" required th:value="${activeUser != null and activeUser.phoneNumber != null ? activeUser.phoneNumber : (activeUserId != null ? activeUserId : 'kanchantarun82@gmail.com')}">
+                            <button type="button" class="btn btn-outline-secondary" title="QR Identification">
+                                <i class="bi bi-qr-code"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- QR_ID* -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">QR_ID<span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm mb-2">
+                            <input type="text" id="pageQrId" class="form-control" placeholder="QR-GATE-MAIN-101" required value="QR-GATE-MAIN-101">
+                            <button type="button" class="btn btn-outline-info" onclick="startMainCameraScanner()" title="Scan QR Code with Camera">
+                                <i class="bi bi-camera-fill"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" title="QR Code">
+                                <i class="bi bi-qr-code"></i>
+                            </button>
+                        </div>
+                        <!-- Camera scanner container -->
+                        <div id="main-qr-reader-container" class="mb-2" style="display: none;">
+                            <div id="main-qr-reader" class="rounded overflow-hidden border border-info"></div>
+                        </div>
+                        <!-- Quick Test Triggers -->
+                        <div class="d-flex flex-wrap gap-1">
+                            <button type="button" class="btn btn-xs btn-outline-secondary font-monospace" style="font-size:0.75rem;" onclick="setPageQrId('QR-GATE-MAIN-101')">Main Gate</button>
+                            <button type="button" class="btn btn-xs btn-outline-secondary font-monospace" style="font-size:0.75rem;" onclick="setPageQrId('QR-PERIM-NORTH-102')">North Fence</button>
+                            <button type="button" class="btn btn-xs btn-outline-secondary font-monospace" style="font-size:0.75rem;" onclick="setPageQrId('QR-SERVER-CTRL-103')">Server Room</button>
+                            <button type="button" class="btn btn-xs btn-outline-secondary font-monospace" style="font-size:0.75rem;" onclick="setPageQrId('QR-WH-BLDG-B-104')">Warehouse B</button>
+                        </div>
+                    </div>
+
+                    <!-- Scan_Time* (Automatic Date and Time pickup) -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">Scan_Time<span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="pageScanTime" class="form-control font-monospace" required readonly>
+                            <button type="button" class="btn btn-outline-secondary" onclick="updatePageLiveTime()" title="Refresh Timestamp">
+                                <i class="bi bi-calendar-event"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Actual_Location* -->
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold text-secondary mb-1">Actual_Location<span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="pageActualLocation" class="form-control font-monospace" placeholder="25.565807, 83.983709" value="25.565807, 83.983709" required>
+                            <button type="button" class="btn btn-outline-info" onclick="detectPageGPSLocation()" title="Get Live GPS Coordinates">
+                                <i class="bi bi-geo-alt-fill text-danger"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Live Map / Satellite Preview Container -->
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-start gap-1 mb-1">
+                            <button type="button" id="btnPageMapTab" class="btn btn-xs btn-outline-light active px-2 py-0" style="font-size:0.75rem;" onclick="switchPageMapType('map')">Map</button>
+                            <button type="button" id="btnPageSatTab" class="btn btn-xs btn-outline-light px-2 py-0" style="font-size:0.75rem;" onclick="switchPageMapType('satellite')">Satellite</button>
+                        </div>
+                        <div id="page-mini-map" style="width: 100%; height: 160px; border-radius: 8px; border: 2px solid #6b21a8; overflow: hidden;"></div>
+                    </div>
+
+                    <!-- Status Dropdown -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">Status</label>
+                        <select id="pageStatus" class="form-select form-select-sm">
+                            <option value="Out of Range" selected>Out of Range</option>
+                            <option value="On-Time">On-Time</option>
+                            <option value="Duty Verified">Duty Verified</option>
+                            <option value="Late">Late</option>
+                            <option value="Incident">Incident</option>
+                        </select>
+                    </div>
+
+                    <!-- Thana_Name -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">Thana_Name</label>
+                        <input type="text" id="pageThanaName" class="form-control form-control-sm" placeholder="XYZ (e.g. Buxar Town Thana)" value="XYZ">
+                    </div>
+
+                    <!-- Photo_Proof (Camera live capture / proof photo) -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">Photo_Proof</label>
+                        <div class="border border-secondary rounded p-3 text-center bg-dark-subtle position-relative" style="cursor: pointer;" onclick="document.getElementById('pagePhotoFileInput').click()">
+                            <i class="bi bi-camera-fill fs-3 text-info d-block mb-1"></i>
+                            <span class="small text-light fw-medium d-block">Take Live Photo / Attach Proof Photo 📷</span>
+                            <span class="small text-muted d-block" style="font-size: 0.72rem;">Click to open camera or upload photo</span>
+                            <input type="file" id="pagePhotoFileInput" accept="image/*" capture="environment" style="display: none;" onchange="handlePagePhotoFileSelect(event)">
+                            <div id="pagePhotoPreviewContainer" class="mt-2" style="display: none;">
+                                <img id="pagePhotoPreviewImg" src="" style="max-height: 140px; border-radius: 8px; border: 2px solid #10b981;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Patrol_Status -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">Patrol_Status</label>
+                        <input type="text" id="pagePatrolStatus" class="form-control form-control-sm" placeholder="e.g. Normal Patrol / In Range / Pending">
+                    </div>
+
+                    <!-- Form Action Buttons: Cancel | Save -->
+                    <div class="d-flex align-items-center justify-content-between pt-2 border-top border-secondary">
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none text-secondary" onclick="resetPageScanLogForm()">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-primary px-5 fw-bold" style="background-color: #7e22ce; border-color: #6b21a8;">Save</button>
+                    </div>
+
+                </form>
             </div>
         </div>
 
@@ -67,31 +168,48 @@
             <div class="card bg-dark border-secondary h-100 p-3">
                 <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary pb-2">
                     <h6 class="m-0 text-info fw-bold"><i class="bi bi-clock-history me-2"></i>Live Scan Activity Stream</h6>
-                    <button class="btn btn-sm btn-outline-info rounded-pill" onclick="exportScanLogsCSV()">
-                        <i class="bi bi-download me-1"></i>Export CSV
-                    </button>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-success rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#createScanLogModal" onclick="initScanLogModalMap()">
+                            <i class="bi bi-plus-lg me-1"></i>Record Scan Log
+                        </button>
+                        <button class="btn btn-sm btn-outline-info rounded-pill" onclick="exportScanLogsCSV()">
+                            <i class="bi bi-download me-1"></i>Export CSV
+                        </button>
+                    </div>
                 </div>
 
-                <div class="scan-feed" style="max-height: 480px; overflow-y: auto;">
-                    <div th:each="log : ${scanLogs}" class="log-card">
-                        <div>
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <strong class="fs-6 text-light" th:text="${log.checkpointId}">chk-101</strong>
-                                <span th:if="${log.status == 'On-Time'}" class="badge-on-time">On-Time</span>
-                                <span th:if="${log.status == 'Incident'}" class="badge-incident">Incident</span>
-                                <span th:if="${log.status == 'Late'}" class="badge-late">Late</span>
+                <div class="scan-feed" style="max-height: 520px; overflow-y: auto;">
+                    <div th:each="log : ${scanLogs}" class="log-card p-3 mb-2 rounded bg-dark-subtle border border-secondary">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                    <strong class="fs-6 text-light" th:text="${log.checkpointId != null ? log.checkpointId : log.scanId}">chk-101</strong>
+                                    <span th:if="${log.status == 'On-Time' or log.status == 'Duty Verified'}" class="badge-on-time" th:text="${log.status}">Duty Verified</span>
+                                    <span th:if="${log.status == 'Incident'}" class="badge-incident">Incident</span>
+                                    <span th:if="${log.status == 'Out of Range' or log.status == 'Late'}" class="badge-late" th:text="${log.status}">Out of Range</span>
+                                    <span th:if="${log.thanaName != null and !log.thanaName.isEmpty()}" class="badge bg-secondary text-light small" th:text="${log.thanaName}">Buxar Town Thana</span>
+                                </div>
+                                <div class="text-muted small mb-1">
+                                    <i class="bi bi-person me-1 text-info"></i><span th:text="${log.userId}">usr-001</span>
+                                    <span class="mx-1">•</span>
+                                    <i class="bi bi-qr-code me-1 text-warning"></i><span th:text="${log.qrId != null ? log.qrId : 'QR-CODE'}">QR-CODE</span>
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="bi bi-geo-alt me-1 text-danger"></i><span th:text="${log.latitude} + ', ' + ${log.longitude}">25.565807, 83.983709</span>
+                                </div>
+                                <div th:if="${log.patrolStatus != null and !log.patrolStatus.isEmpty()}" class="small text-warning mt-1">
+                                    <i class="bi bi-shield-check me-1"></i>Patrol Status: <span th:text="${log.patrolStatus}">In Range</span>
+                                </div>
+                                <div th:if="${log.notes != null and !log.notes.isEmpty()}" class="small text-info mt-1">
+                                    <i class="bi bi-chat-left-text me-1"></i><span th:text="${log.notes}">Notes</span>
+                                </div>
                             </div>
-                            <div class="text-muted small">
-                                <i class="bi bi-person me-1"></i><span th:text="${log.userId}">usr-001</span>
-                                <span class="mx-1">•</span>
-                                <i class="bi bi-geo-alt me-1"></i><span th:text="${log.latitude} + ', ' + ${log.longitude}">25.56, 83.97</span>
+                            <div class="text-end">
+                                <span class="text-secondary small font-monospace d-block mb-2" th:text="${#temporals.format(log.scanTime, 'yyyy-MM-dd HH:mm:ss')}">14:32:00</span>
+                                <div th:if="${log.photoProof != null and !log.photoProof.isEmpty()}">
+                                    <img th:src="${log.photoProof}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #06b6d4;" alt="Proof Photo">
+                                </div>
                             </div>
-                            <div th:if="${log.notes != null and !log.notes.isEmpty()}" class="small text-info mt-1">
-                                <i class="bi bi-chat-left-text me-1"></i><span th:text="${log.notes}">Notes</span>
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <span class="text-secondary small font-monospace" th:text="${#temporals.format(log.scanTime, 'HH:mm:ss')}">14:32:00</span>
                         </div>
                     </div>
                 </div>
@@ -100,5 +218,127 @@
     </div>
 
 </div>
+
+<!-- Modal Dialog: Create / Record Scan Log (Matching User Screenshot Layout) -->
+<div class="modal fade" id="createScanLogModal" tabindex="-1" aria-labelledby="createScanLogModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <div class="modal-header border-secondary py-2 px-3">
+                <h5 class="modal-title fs-6 fw-bold text-info" id="createScanLogModalLabel">
+                    <i class="bi bi-qr-code-scan me-2"></i>Scan Logs
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <form id="scanLogRecordForm" onsubmit="submitScanLogRecordForm(event)">
+                    
+                    <!-- Log_ID* -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">Log_ID<span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="modalLogId" class="form-control font-monospace" placeholder="78f97f69" required readonly>
+                            <button type="button" class="btn btn-outline-secondary" onclick="generateNewLogId()" title="Generate ID">
+                                <i class="bi bi-qr-code"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- User_ID* -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">User_ID<span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="modalUserId" class="form-control" placeholder="kanchantarun82@gmail.com" required th:value="${activeUserId != null ? activeUserId : 'kanchantarun82@gmail.com'}">
+                            <button type="button" class="btn btn-outline-secondary">
+                                <i class="bi bi-qr-code"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- QR_ID* -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">QR_ID<span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="modalQrId" class="form-control" placeholder="QR-GATE-MAIN-101" required value="QR-GATE-MAIN-101">
+                            <button type="button" class="btn btn-outline-secondary">
+                                <i class="bi bi-qr-code"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scan_Time* -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">Scan_Time<span class="text-danger">*</span></label>
+                        <input type="text" id="modalScanTime" class="form-control form-control-sm font-monospace" required>
+                    </div>
+
+                    <!-- Actual_Location* -->
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold text-secondary mb-1">Actual_Location<span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="modalActualLocation" class="form-control font-monospace" placeholder="25.565807, 83.983709" value="25.565807, 83.983709" required>
+                            <button type="button" class="btn btn-outline-info" onclick="detectModalGPSLocation()" title="Get Current GPS Location">
+                                <i class="bi bi-geo-alt-fill text-danger"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mini Interactive Map / Satellite Preview Container -->
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-start gap-1 mb-1">
+                            <button type="button" id="btnModalMapTab" class="btn btn-xs btn-outline-light active px-2 py-0" style="font-size:0.75rem;" onclick="switchModalMapType('map')">Map</button>
+                            <button type="button" id="btnModalSatTab" class="btn btn-xs btn-outline-light px-2 py-0" style="font-size:0.75rem;" onclick="switchModalMapType('satellite')">Satellite</button>
+                        </div>
+                        <div id="modal-mini-map" style="width: 100%; height: 140px; border-radius: 8px; border: 2px solid #6b21a8; overflow: hidden;"></div>
+                    </div>
+
+                    <!-- Status Dropdown -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">Status</label>
+                        <select id="modalStatus" class="form-select form-select-sm">
+                            <option value="Out of Range" selected>Out of Range</option>
+                            <option value="On-Time">On-Time</option>
+                            <option value="Duty Verified">Duty Verified</option>
+                            <option value="Late">Late</option>
+                            <option value="Incident">Incident</option>
+                        </select>
+                    </div>
+
+                    <!-- Thana_Name -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">Thana_Name</label>
+                        <input type="text" id="modalThanaName" class="form-control form-control-sm" placeholder="XYZ (e.g. Buxar Town Thana)" value="XYZ">
+                    </div>
+
+                    <!-- Photo_Proof -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">Photo_Proof</label>
+                        <div class="border border-secondary rounded p-3 text-center bg-dark-subtle position-relative" style="cursor: pointer;" onclick="document.getElementById('photoFileInput').click()">
+                            <i class="bi bi-camera-fill fs-3 text-secondary d-block mb-1"></i>
+                            <span class="small text-muted d-block">Click to capture / attach proof photo 📷</span>
+                            <input type="file" id="photoFileInput" accept="image/*" capture="environment" style="display: none;" onchange="handlePhotoFileSelect(event)">
+                            <div id="photoPreviewContainer" class="mt-2" style="display: none;">
+                                <img id="photoPreviewImg" src="" style="max-height: 120px; border-radius: 8px; border: 1px solid #10b981;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Patrol_Status -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">Patrol_Status</label>
+                        <input type="text" id="modalPatrolStatus" class="form-control form-control-sm" placeholder="e.g. Normal Patrol / In Range / Pending">
+                    </div>
+
+                    <!-- Form Footer Actions: Cancel | Save -->
+                    <div class="d-flex align-items-center justify-content-between pt-2 border-top border-secondary">
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none text-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-primary px-4 fw-bold style-purple-btn" style="background-color: #7e22ce; border-color: #6b21a8;">Save</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

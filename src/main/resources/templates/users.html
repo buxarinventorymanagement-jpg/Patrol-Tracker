@@ -47,7 +47,7 @@
                         <div class="small text-emerald mt-1 fw-bold"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem;"></i><span th:text="${u.status}">Active</span></div>
                         
                         <!-- Action Buttons: Edit Profile & WhatsApp -->
-                        <div class="d-flex gap-1 mt-2">
+                        <div class="d-flex gap-1 mt-2 flex-wrap justify-content-end">
                             <button th:if="${isSPAdmin or u.userId == activeUserId}" 
                                     th:data-id="${u.userId}"
                                     th:data-name="${u.name}"
@@ -58,7 +58,15 @@
                                     class="btn btn-outline-warning btn-sm py-0 px-2" 
                                     onclick="openEditOfficerModal(this)" 
                                     title="Edit Officer Name & Details">
-                                <i class="bi bi-pencil-square me-1"></i>Edit Profile
+                                <i class="bi bi-pencil-square me-1"></i>Edit
+                            </button>
+                            <button th:if="${isSPAdmin or isSHO}" 
+                                    th:data-id="${u.userId}"
+                                    th:data-name="${u.name}"
+                                    class="btn btn-outline-danger btn-sm py-0 px-2" 
+                                    onclick="deleteUserRecord(this)" 
+                                    title="Delete User Account">
+                                <i class="bi bi-trash-fill me-1"></i>Delete
                             </button>
                             <button th:data-phone="${u.phoneNumber}" th:data-name="${u.name}" th:data-rank="${u.designation}" class="btn btn-outline-success btn-sm py-0 px-2" onclick="sendDirectWhatsApp(this)" title="Send direct WhatsApp message">
                                 <i class="bi bi-whatsapp me-1"></i>WhatsApp
@@ -110,7 +118,7 @@
                     </div>
                     <div class="modal-footer border-danger">
                         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" id="shoSubmitBtn" class="btn btn-danger btn-sm fw-bold px-3 shadow">
+                        <button type="button" id="shoSubmitBtn" class="btn btn-danger btn-sm fw-bold px-3 shadow" onclick="saveShoUser()">
                             <i class="bi bi-shield-check me-1"></i>Register SHO User
                         </button>
                     </div>
@@ -167,7 +175,7 @@
                     </div>
                     <div class="modal-footer border-secondary">
                         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" id="staffSubmitBtn" class="btn btn-primary btn-sm fw-bold px-3">
+                        <button type="button" id="staffSubmitBtn" class="btn btn-primary btn-sm fw-bold px-3" onclick="saveStaffUser()">
                             <i class="bi bi-check-circle-fill me-1"></i>Register Staff Member
                         </button>
                     </div>
@@ -335,7 +343,12 @@ function saveShoUser() {
     return res.json();
   }).then(data => {
     alert('✓ STATION HOUSE OFFICER (SHO) SAVED SUCCESSFULLY!\nName: ' + name + '\nRank: ' + designation + '\nMobile: ' + phone + '\nBadge: ' + badgeNumber);
-    window.location.reload();
+    const modalEl = document.getElementById('newShoModal');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+    }
+    window.location.href = window.location.href;
   }).catch(err => {
     alert('❌ ERROR SAVING SHO USER: ' + err.message);
     if (submitBtn) {
@@ -389,7 +402,12 @@ function saveStaffUser() {
     return res.json();
   }).then(data => {
     alert('✓ POLICE STAFF MEMBER SAVED SUCCESSFULLY!\nName: ' + name + '\nRank: ' + designation + '\nMobile: ' + phone);
-    window.location.reload();
+    const modalEl = document.getElementById('newUserModal');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+    }
+    window.location.href = window.location.href;
   }).catch(err => {
     alert('❌ ERROR SAVING STAFF MEMBER: ' + err.message);
     if (submitBtn) {
@@ -412,6 +430,32 @@ function sendDirectWhatsApp(btn) {
   const message = "👮‍♂️ *POLICE STATION DIRECT MESSAGE*\nTo: " + name + " (" + rank + ")\nMobile: " + phone + "\n\nOfficer, please report your current status to the Station House Officer (SHO).";
   const url = "https://wa.me/" + cleanPhone + "?text=" + encodeURIComponent(message);
   window.open(url, '_blank');
+}
+
+function deleteUserRecord(btn) {
+  const userId = btn.getAttribute('data-id');
+  const name = btn.getAttribute('data-name');
+
+  if (!userId) return;
+
+  if (confirm(`🗑️ ARE YOU SURE YOU WANT TO DELETE USER: "${name}" (${userId})?\n\nThis will permanently remove the user from the Police Station Directory.`)) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Deleting...';
+
+    fetch('/api/users/' + encodeURIComponent(userId), {
+      method: 'DELETE'
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert('✓ USER DELETED SUCCESSFULLY: ' + name);
+      window.location.href = window.location.href;
+    })
+    .catch(err => {
+      alert('❌ Error deleting user: ' + err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-trash-fill me-1"></i>Delete';
+    });
+  }
 }
 </script>
 </body>

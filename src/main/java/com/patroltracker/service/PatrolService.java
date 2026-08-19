@@ -74,6 +74,16 @@ public class PatrolService {
         return saved;
     }
 
+    @Transactional
+    public boolean deleteUser(String userId) {
+        if (userId != null && userRepository.existsById(userId)) {
+            userRepository.deleteById(userId);
+            System.out.println(" 🗑️ USER DELETED FROM DATABASE: " + userId);
+            return true;
+        }
+        return false;
+    }
+
     // Checkpoints Management
     public List<Checkpoint> getAllCheckpoints() {
         return checkpointRepository.findAll();
@@ -207,6 +217,16 @@ public class PatrolService {
         response.put("smsMessage", smsLog.get("smsMessage"));
 
         return response;
+    }
+
+    public ScanLog saveScanLog(ScanLog scanLog) {
+        if (scanLog.getScanId() == null || scanLog.getScanId().isBlank()) {
+            scanLog.setScanId("scn-" + UUID.randomUUID().toString().substring(0, 8));
+        }
+        if (scanLog.getScanTime() == null) {
+            scanLog.setScanTime(OffsetDateTime.now());
+        }
+        return scanLogRepository.save(scanLog);
     }
 
     // Role-Based Data Scoping Methods (Admin vs Guard Self-Data Isolation)

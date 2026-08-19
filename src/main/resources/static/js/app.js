@@ -28,6 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('patrol-map')) {
     initPatrolMap();
   }
+
+  if (document.getElementById('mainScanLogForm')) {
+    initPageScanLogForm();
+  }
 });
 
 function toggleViewMode() {
@@ -164,14 +168,18 @@ function initPatrolMap() {
     maxZoom: 20
   }).addTo(patrolMap);
 
-  // Create Marker Cluster Group with custom green/gray cluster styling
+  // Create Marker Cluster Group with custom status color cluster styling
   if (typeof L.markerClusterGroup === 'function') {
     markerClusterGroup = L.markerClusterGroup({
       iconCreateFunction: function(cluster) {
         const childCount = cluster.getChildCount();
         const markers = cluster.getAllChildMarkers();
-        const hasScanned = markers.some(m => m.options.itemData && m.options.itemData.classification === 'Verified Checkpoint');
-        const colorClass = hasScanned ? '' : 'gray';
+        const hasUnscanned = markers.some(m => m.options.itemData && (m.options.itemData.classification === 'QR Not Scanned' || m.options.itemData.classification === 'Not Scanned'));
+        const hasVerified = markers.some(m => m.options.itemData && (m.options.itemData.classification === 'Duty Verified' || m.options.itemData.classification === 'Verified Checkpoint'));
+        
+        let colorClass = 'orange';
+        if (hasUnscanned) colorClass = 'red';
+        else if (hasVerified) colorClass = 'green';
         
         return new L.DivIcon({
           html: `<div><span>${childCount}</span></div>`,
@@ -185,7 +193,7 @@ function initPatrolMap() {
     });
   }
 
-  // Fetch Checkpoints and Scan Logs to seed demo Crime & Patrol items
+  // Fetch Checkpoints and Scan Logs to seed demo Status items
   Promise.all([
     fetch('/api/checkpoints').then(res => res.json()),
     fetch('/api/scan-logs').then(res => res.json())
@@ -193,35 +201,44 @@ function initPatrolMap() {
     const scannedCheckpointIds = new Set(scanLogs.map(l => l.checkpointId));
     allMapItems = [];
 
-    // Map existing checkpoints
+    // Map existing checkpoints with 3 Status Classifications
     checkpoints.forEach((chk, index) => {
       if (chk.latitude && chk.longitude) {
         const isScanned = scannedCheckpointIds.has(chk.checkpointId) || scannedCheckpointIds.has(chk.qrCodeData);
+        let classification = 'QR Not Scanned';
+        let details = 'Checkpoint QR not scanned - Red Alert';
+        
+        if (isScanned) {
+          classification = 'Duty Verified';
+          details = 'Scan completed & verified on time';
+        } else if (index % 2 === 0) {
+          classification = 'Guard Present';
+          details = 'Guard present on duty - Scan pending';
+        }
+
         allMapItems.push({
           id: chk.checkpointId,
           name: chk.name,
           lat: parseFloat(chk.latitude),
           lng: parseFloat(chk.longitude),
           type: 'Checkpoint',
-          classification: isScanned ? 'Verified Checkpoint' : 'Others / Pending',
+          classification: classification,
           qrCodeData: chk.qrCodeData,
-          details: isScanned ? 'Green Scanned Verification' : 'Pending Inspection'
+          details: details
         });
       }
     });
 
-    // Seed Strategic District Crime & Patrol Incidents (Matching screenshot categories)
-    const demoIncidents = [
-      { id: 'inc-101', name: 'Ghazipur Financial Crime Report', lat: 25.578000, lng: 83.578000, type: 'Crime', classification: 'Financial Crime', details: 'Cyber fraud reported' },
-      { id: 'inc-102', name: 'Rasra Narcotics Offence Inspection', lat: 25.850000, lng: 83.850000, type: 'Crime', classification: 'Narcotics Offence', details: 'Contraband seized' },
-      { id: 'inc-103', name: 'Buxar Land Dispute Altercation', lat: 25.560000, lng: 83.970000, type: 'Crime', classification: 'Land Dispute', details: 'Boundary wall argument' },
-      { id: 'inc-104', name: 'Dumraon Robbery Incident', lat: 25.553000, lng: 84.150000, type: 'Crime', classification: 'Robbery', details: 'Store burglary' },
-      { id: 'inc-105', name: 'Simri Major Highway Accident', lat: 25.630000, lng: 84.100000, type: 'Crime', classification: 'Major Accident', details: 'Vehicle collision on NH-922' },
-      { id: 'inc-106', name: 'Ballia Serious Crime Alert', lat: 25.750000, lng: 84.150000, type: 'Crime', classification: 'Serious Crime / Riot', details: 'Public disturbance' },
-      { id: 'inc-107', name: 'Kochas Dacoity Patrol Scan', lat: 25.380000, lng: 83.950000, type: 'Crime', classification: 'Dacoity', details: 'Night patrol check' }
+    // Additional sample Patrol Points showing all 3 statuses (Duty Verified, Guard Present, QR Not Scanned)
+    const demoStatusPoints = [
+      { id: 'chk-201', name: 'Buxar Railway Station Post', lat: 25.560000, lng: 83.970000, type: 'Checkpoint', classification: 'Duty Verified', qrCodeData: 'QR-RLWY-201', details: 'Duty Verified & Scanned' },
+      { id: 'chk-202', name: 'Collectorate Gate Checkpoint', lat: 25.568000, lng: 83.980000, type: 'Checkpoint', classification: 'Guard Present', qrCodeData: 'QR-COLL-202', details: 'Guard Present on Duty - Scan Pending' },
+      { id: 'chk-203', name: 'Simri Highway Patrol Point', lat: 25.630000, lng: 84.100000, type: 'Checkpoint', classification: 'QR Not Scanned', qrCodeData: 'QR-HWY-203', details: 'Checkpoint QR Not Scanned - Red Alert' },
+      { id: 'chk-204', name: 'Dumraon Sector Post', lat: 25.553000, lng: 84.150000, type: 'Checkpoint', classification: 'Guard Present', qrCodeData: 'QR-DUM-204', details: 'Guard Present on Duty - Scan Pending' },
+      { id: 'chk-205', name: 'Kochas Border Outpost', lat: 25.380000, lng: 83.950000, type: 'Checkpoint', classification: 'QR Not Scanned', qrCodeData: 'QR-KCH-205', details: 'Checkpoint QR Not Scanned - Red Alert' }
     ];
 
-    allMapItems.push(...demoIncidents);
+    allMapItems.push(...demoStatusPoints);
 
     renderMapItems(allMapItems);
   }).catch(err => {
@@ -331,15 +348,16 @@ function renderMapItems(items) {
 
 function getClassificationColor(classification) {
   switch (classification) {
-    case 'Serious Crime / Riot': return '#dc2626';
-    case 'Dacoity': return '#ea580c';
-    case 'Robbery': return '#d97706';
-    case 'Accident': case 'Major Accident': return '#0284c7';
-    case 'Financial Crime': return '#3b82f6';
-    case 'Narcotics Offence': return '#8b5cf6';
-    case 'Land Dispute': return '#ec4899';
-    case 'Verified Checkpoint': return '#16a34a';
-    default: return '#64748b';
+    case 'Duty Verified':
+    case 'Verified Checkpoint':
+      return '#16a34a'; // Green
+    case 'Guard Present':
+    case 'Present':
+      return '#f97316'; // Orange
+    case 'QR Not Scanned':
+    case 'Not Scanned':
+    default:
+      return '#dc2626'; // Red
   }
 }
 
@@ -432,4 +450,434 @@ function exportScanLogsCSV() {
       a.download = `patrol_scan_logs_${activeUser}_${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
     });
+}
+
+// ====================================================================
+// SCAN LOGS FORM MODAL CONTROLLER (Matching User Mobile Screenshot)
+// ====================================================================
+
+let modalMiniMap = null;
+let modalMapMarker = null;
+let modalMapTileLayer = null;
+let selectedPhotoBase64 = null;
+
+function generateNewLogId() {
+  const logIdInput = document.getElementById('modalLogId');
+  if (logIdInput) {
+    logIdInput.value = Math.random().toString(16).substring(2, 10);
+  }
+}
+
+function initScanLogModalMap() {
+  generateNewLogId();
+  
+  // Set current formatted date & time
+  const timeInput = document.getElementById('modalScanTime');
+  if (timeInput) {
+    const now = new Date();
+    timeInput.value = now.toLocaleString('en-US', {
+      month: '2-digit', day: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+    });
+  }
+
+  const mapContainer = document.getElementById('modal-mini-map');
+  if (!mapContainer) return;
+
+  setTimeout(() => {
+    if (modalMiniMap) {
+      modalMiniMap.invalidateSize();
+      return;
+    }
+
+    const defaultLat = 25.565807;
+    const defaultLng = 83.983709;
+
+    modalMiniMap = L.map('modal-mini-map', {
+      center: [defaultLat, defaultLng],
+      zoom: 15,
+      zoomControl: false
+    });
+
+    modalMapTileLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      attribution: '&copy; Google Maps'
+    }).addTo(modalMiniMap);
+
+    modalMapMarker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(modalMiniMap);
+
+    modalMapMarker.on('dragend', function(event) {
+      const position = modalMapMarker.getLatLng();
+      updateLocationInput(position.lat, position.lng);
+    });
+
+    modalMiniMap.on('click', function(e) {
+      modalMapMarker.setLatLng(e.latlng);
+      updateLocationInput(e.latlng.lat, e.latlng.lng);
+    });
+
+    modalMiniMap.invalidateSize();
+  }, 400);
+}
+
+function updateLocationInput(lat, lng) {
+  const locInput = document.getElementById('modalActualLocation');
+  if (locInput) {
+    locInput.value = `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
+  }
+}
+
+function switchModalMapType(type) {
+  if (!modalMiniMap) return;
+
+  const btnMap = document.getElementById('btnModalMapTab');
+  const btnSat = document.getElementById('btnModalSatTab');
+
+  if (modalMapTileLayer) {
+    modalMiniMap.removeLayer(modalMapTileLayer);
+  }
+
+  if (type === 'satellite') {
+    modalMapTileLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      attribution: '&copy; Google Maps Satellite'
+    }).addTo(modalMiniMap);
+    btnMap?.classList.remove('active');
+    btnSat?.classList.add('active');
+  } else {
+    modalMapTileLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      attribution: '&copy; Google Maps'
+    }).addTo(modalMiniMap);
+    btnSat?.classList.remove('active');
+    btnMap?.classList.add('active');
+  }
+}
+
+function detectModalGPSLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      updateLocationInput(lat, lng);
+      if (modalMiniMap && modalMapMarker) {
+        modalMiniMap.setView([lat, lng], 16);
+        modalMapMarker.setLatLng([lat, lng]);
+      }
+    }, (err) => {
+      alert('Could not fetch exact GPS location. Using default coordinates.');
+    });
+  }
+}
+
+function handlePhotoFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    selectedPhotoBase64 = e.target.result;
+    const previewContainer = document.getElementById('photoPreviewContainer');
+    const previewImg = document.getElementById('photoPreviewImg');
+    if (previewImg && previewContainer) {
+      previewImg.src = selectedPhotoBase64;
+      previewContainer.style.display = 'block';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitScanLogRecordForm(event) {
+  event.preventDefault();
+
+  const scanId = document.getElementById('modalLogId')?.value || Math.random().toString(16).substring(2, 10);
+  const userId = document.getElementById('modalUserId')?.value || 'kanchantarun82@gmail.com';
+  const qrId = document.getElementById('modalQrId')?.value || 'QR-GATE-MAIN-101';
+  const status = document.getElementById('modalStatus')?.value || 'Out of Range';
+  const thanaName = document.getElementById('modalThanaName')?.value || 'XYZ';
+  const patrolStatus = document.getElementById('modalPatrolStatus')?.value || '';
+  const locStr = document.getElementById('modalActualLocation')?.value || '25.565807, 83.983709';
+
+  let lat = 25.565807;
+  let lng = 83.983709;
+  if (locStr.includes(',')) {
+    const parts = locStr.split(',');
+    lat = parseFloat(parts[0].trim());
+    lng = parseFloat(parts[1].trim());
+  }
+
+  const payload = {
+    scanId: scanId,
+    userId: userId,
+    qrId: qrId,
+    checkpointId: qrId,
+    dutyId: 'duty-801',
+    status: status,
+    thanaName: thanaName,
+    patrolStatus: patrolStatus,
+    latitude: lat,
+    longitude: lng,
+    photoProof: selectedPhotoBase64,
+    notes: `Thana: ${thanaName} | Patrol Status: ${patrolStatus || 'Recorded'}`
+  };
+
+  fetch('/api/scan-logs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert('✅ SCAN LOG RECORDED & SAVED SUCCESSFULLY!');
+    location.reload();
+  })
+  .catch(err => {
+    console.error('Error saving scan log:', err);
+    alert('Error saving scan log to database.');
+  });
+}
+
+// ====================================================================
+// MAIN PAGE SCAN LOGS FORM CONTROLLER (Matching User Screenshot)
+// ====================================================================
+
+let pageMiniMap = null;
+let pageMapMarker = null;
+let pageMapTileLayer = null;
+let pageSelectedPhotoBase64 = null;
+let mainHtml5QrCodeScanner = null;
+
+function generatePageLogId() {
+  const logIdInput = document.getElementById('pageLogId');
+  if (logIdInput) {
+    logIdInput.value = Math.random().toString(16).substring(2, 10);
+  }
+}
+
+function updatePageLiveTime() {
+  const timeInput = document.getElementById('pageScanTime');
+  if (timeInput) {
+    const now = new Date();
+    timeInput.value = now.toLocaleString('en-US', {
+      month: '2-digit', day: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+    });
+  }
+}
+
+function setPageQrId(qrId) {
+  const qrInput = document.getElementById('pageQrId');
+  if (qrInput) qrInput.value = qrId;
+  updatePageLiveTime();
+}
+
+function initPageScanLogForm() {
+  generatePageLogId();
+  updatePageLiveTime();
+
+  const mapContainer = document.getElementById('page-mini-map');
+  if (!mapContainer) return;
+
+  setTimeout(() => {
+    if (pageMiniMap) {
+      pageMiniMap.invalidateSize();
+      return;
+    }
+
+    const defaultLat = 25.565807;
+    const defaultLng = 83.983709;
+
+    pageMiniMap = L.map('page-mini-map', {
+      center: [defaultLat, defaultLng],
+      zoom: 15,
+      zoomControl: false
+    });
+
+    pageMapTileLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      attribution: '&copy; Google Maps'
+    }).addTo(pageMiniMap);
+
+    const redIcon = L.divIcon({
+      className: 'custom-pin-icon',
+      html: `<div style="background-color:#dc2626; width:16px; height:16px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 8px rgba(220,38,38,0.8);"></div>`,
+      iconSize: [16, 16]
+    });
+
+    pageMapMarker = L.marker([defaultLat, defaultLng], { icon: redIcon, draggable: true }).addTo(pageMiniMap);
+
+    pageMapMarker.on('dragend', function(event) {
+      const position = pageMapMarker.getLatLng();
+      updatePageLocationInput(position.lat, position.lng);
+    });
+
+    pageMiniMap.on('click', function(e) {
+      pageMapMarker.setLatLng(e.latlng);
+      updatePageLocationInput(e.latlng.lat, e.latlng.lng);
+    });
+
+    // Auto detect actual GPS location of guard
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        updatePageLocationInput(lat, lng);
+        if (pageMiniMap && pageMapMarker) {
+          pageMiniMap.setView([lat, lng], 16);
+          pageMapMarker.setLatLng([lat, lng]);
+        }
+      }, () => {});
+    }
+
+    pageMiniMap.invalidateSize();
+  }, 400);
+}
+
+function updatePageLocationInput(lat, lng) {
+  const locInput = document.getElementById('pageActualLocation');
+  if (locInput) {
+    locInput.value = `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
+  }
+}
+
+function switchPageMapType(type) {
+  if (!pageMiniMap) return;
+
+  const btnMap = document.getElementById('btnPageMapTab');
+  const btnSat = document.getElementById('btnPageSatTab');
+
+  if (pageMapTileLayer) {
+    pageMiniMap.removeLayer(pageMapTileLayer);
+  }
+
+  if (type === 'satellite') {
+    pageMapTileLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      attribution: '&copy; Google Maps Satellite'
+    }).addTo(pageMiniMap);
+    btnMap?.classList.remove('active');
+    btnSat?.classList.add('active');
+  } else {
+    pageMapTileLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      attribution: '&copy; Google Maps'
+    }).addTo(pageMiniMap);
+    btnSat?.classList.remove('active');
+    btnMap?.classList.add('active');
+  }
+}
+
+function detectPageGPSLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      updatePageLocationInput(lat, lng);
+      if (pageMiniMap && pageMapMarker) {
+        pageMiniMap.setView([lat, lng], 16);
+        pageMapMarker.setLatLng([lat, lng]);
+      }
+    }, (err) => {
+      alert('Could not fetch exact GPS location. Using default coordinates.');
+    });
+  }
+}
+
+function startMainCameraScanner() {
+  const container = document.getElementById('main-qr-reader-container');
+  if (!container) return;
+
+  if (container.style.display === 'block' && mainHtml5QrCodeScanner) {
+    mainHtml5QrCodeScanner.clear();
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+
+  if (typeof Html5QrcodeScanner === 'function') {
+    mainHtml5QrCodeScanner = new Html5QrcodeScanner(
+      "main-qr-reader",
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      false
+    );
+
+    mainHtml5QrCodeScanner.render((decodedText) => {
+      mainHtml5QrCodeScanner.clear();
+      container.style.display = 'none';
+      setPageQrId(decodedText);
+      alert('📷 QR CODE SCANNED SUCCESSFULLY: ' + decodedText);
+    }, (err) => {});
+  }
+}
+
+function handlePagePhotoFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    pageSelectedPhotoBase64 = e.target.result;
+    const previewContainer = document.getElementById('pagePhotoPreviewContainer');
+    const previewImg = document.getElementById('pagePhotoPreviewImg');
+    if (previewImg && previewContainer) {
+      previewImg.src = pageSelectedPhotoBase64;
+      previewContainer.style.display = 'block';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetPageScanLogForm() {
+  generatePageLogId();
+  updatePageLiveTime();
+  const form = document.getElementById('mainScanLogForm');
+  if (form) form.reset();
+  const previewContainer = document.getElementById('pagePhotoPreviewContainer');
+  if (previewContainer) previewContainer.style.display = 'none';
+  pageSelectedPhotoBase64 = null;
+}
+
+function submitMainScanLogForm(event) {
+  event.preventDefault();
+
+  const scanId = document.getElementById('pageLogId')?.value || Math.random().toString(16).substring(2, 10);
+  const userId = document.getElementById('pageUserId')?.value || '+91-9990001112';
+  const qrId = document.getElementById('pageQrId')?.value || 'QR-GATE-MAIN-101';
+  const status = document.getElementById('pageStatus')?.value || 'Out of Range';
+  const thanaName = document.getElementById('pageThanaName')?.value || 'XYZ';
+  const patrolStatus = document.getElementById('pagePatrolStatus')?.value || '';
+  const locStr = document.getElementById('pageActualLocation')?.value || '25.565807, 83.983709';
+
+  let lat = 25.565807;
+  let lng = 83.983709;
+  if (locStr.includes(',')) {
+    const parts = locStr.split(',');
+    lat = parseFloat(parts[0].trim());
+    lng = parseFloat(parts[1].trim());
+  }
+
+  const payload = {
+    scanId: scanId,
+    userId: userId,
+    qrId: qrId,
+    checkpointId: qrId,
+    dutyId: 'duty-801',
+    status: status,
+    thanaName: thanaName,
+    patrolStatus: patrolStatus,
+    latitude: lat,
+    longitude: lng,
+    photoProof: pageSelectedPhotoBase64,
+    notes: `Thana: ${thanaName} | Patrol Status: ${patrolStatus || 'Normal Patrol'}`
+  };
+
+  fetch('/api/scan-logs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert('✅ SCAN LOG SAVED & RECORDED SUCCESSFULLY!');
+    location.reload();
+  })
+  .catch(err => {
+    console.error('Error saving scan log:', err);
+    alert('Error saving scan log to database.');
+  });
 }

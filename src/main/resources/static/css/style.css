@@ -433,30 +433,37 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.class-color-box.serious-crime { background-color: #dc2626; }
-.class-color-box.dacoity { background-color: #ea580c; }
-.class-color-box.robbery { background-color: #d97706; }
-.class-color-box.accident { background-color: #0284c7; }
-.class-color-box.verified { background-color: #16a34a; }
-.class-color-box.others { background-color: #64748b; }
+.class-color-box.duty-verified { background-color: #16a34a; }
+.class-color-box.present { background-color: #f97316; }
+.class-color-box.not-scanned { background-color: #dc2626; }
 
 /* Custom Marker Cluster Pin Badges */
 .custom-cluster-icon {
-  background-color: #22c55e;
+  background-color: #16a34a;
   color: #ffffff;
   font-weight: 800;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
+  box-shadow: 0 0 12px rgba(22, 163, 74, 0.6);
   border: 2px solid #ffffff;
   font-size: 0.85rem;
 }
 
-.custom-cluster-icon.gray {
-  background-color: #64748b;
-  box-shadow: 0 0 12px rgba(100, 116, 139, 0.6);
+.custom-cluster-icon.green {
+  background-color: #16a34a;
+  box-shadow: 0 0 12px rgba(22, 163, 74, 0.6);
+}
+
+.custom-cluster-icon.orange {
+  background-color: #f97316;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.6);
+}
+
+.custom-cluster-icon.red {
+  background-color: #dc2626;
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.6);
 }
 
 .district-summary-card {

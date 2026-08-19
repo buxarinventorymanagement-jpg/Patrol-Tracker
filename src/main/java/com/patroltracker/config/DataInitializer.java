@@ -56,11 +56,22 @@ public class DataInitializer implements CommandLineRunner {
             ));
 
             // Seed Scan Logs
-            scanLogRepository.saveAll(List.of(
-                new ScanLog("scn-9001", "chk-101", "usr-001", "duty-801", "On-Time", new BigDecimal("25.564700"), new BigDecimal("83.977700"), "Gate clear, all visitor entries recorded"),
-                new ScanLog("scn-9002", "chk-102", "usr-001", "duty-801", "On-Time", new BigDecimal("25.565800"), new BigDecimal("83.978500"), "Perimeter lights checked. All normal."),
-                new ScanLog("scn-9003", "chk-103", "usr-001", "duty-801", "On-Time", new BigDecimal("25.564100"), new BigDecimal("83.976900"), "Server room AC running fine at 20C")
-            ));
+            ScanLog s1 = new ScanLog("scn-9001", "chk-101", "usr-001", "duty-801", "On-Time", new BigDecimal("25.564700"), new BigDecimal("83.977700"), "Gate clear, all visitor entries recorded");
+            s1.setQrId("QR-GATE-MAIN-101");
+            s1.setThanaName("Buxar Town Thana");
+            s1.setPatrolStatus("Active Patrol");
+
+            ScanLog s2 = new ScanLog("scn-9002", "chk-102", "usr-001", "duty-801", "Out of Range", new BigDecimal("25.565807"), new BigDecimal("83.983709"), "Perimeter lights checked. All normal.");
+            s2.setQrId("QR-PERIM-NORTH-102");
+            s2.setThanaName("Buxar Industrial Thana");
+            s2.setPatrolStatus("Out of Range Warning");
+
+            ScanLog s3 = new ScanLog("scn-9003", "chk-103", "usr-001", "duty-801", "On-Time", new BigDecimal("25.564100"), new BigDecimal("83.976900"), "Server room AC running fine at 20C");
+            s3.setQrId("QR-SERVER-CTRL-103");
+            s3.setThanaName("Buxar Central Thana");
+            s3.setPatrolStatus("Normal Patrol");
+
+            scanLogRepository.saveAll(List.of(s1, s2, s3));
 
             // Seed Archive Logs
             archiveLogRepository.saveAll(List.of(
