@@ -83,6 +83,18 @@
                             <label class="form-label small text-secondary fw-bold">Shift Name / Sector Title</label>
                             <input type="text" id="shiftName" class="form-control" placeholder="Enter Shift Name (e.g. Day Patrol Sector Alpha)" required>
                         </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-2 mb-md-0">
+                                <label class="form-label small text-secondary fw-bold"><i class="bi bi-calendar-event me-1 text-info"></i>Duty Start Date & Time</label>
+                                <input type="datetime-local" id="dutyStartTime" class="form-control" required>
+                                <div class="form-text text-muted" style="font-size:0.72rem;"><i class="bi bi-info-circle me-1"></i>Current or future time only</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-secondary fw-bold"><i class="bi bi-clock-history me-1 text-warning"></i>Duty End Date & Time</label>
+                                <input type="datetime-local" id="dutyEndTime" class="form-control" required>
+                                <div class="form-text text-muted" style="font-size:0.72rem;"><i class="bi bi-info-circle me-1"></i>Must be after start time</div>
+                            </div>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label small text-secondary fw-bold">Select Police Station Staff Officer (Recipient)</label>
                             <select id="dutyUser" class="form-select" required>
@@ -149,12 +161,45 @@ document.addEventListener('DOMContentLoaded', function () {
       const stationSel = document.getElementById('stationInChargeUser');
       if (stationSel) stationSel.selectedIndex = 0;
       document.querySelectorAll('.chk-name-input').forEach(cb => cb.checked = false);
+
+      // Set minimum date-time restriction to current time
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const nowIsoLocal = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+      const startTimeInput = document.getElementById('dutyStartTime');
+      const endTimeInput = document.getElementById('dutyEndTime');
+
+      if (startTimeInput) {
+        startTimeInput.min = nowIsoLocal;
+        startTimeInput.value = nowIsoLocal;
+      }
+
+      // Default end time to 8 hours later
+      const endDate = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+      const endYear = endDate.getFullYear();
+      const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
+      const endDay = String(endDate.getDate()).padStart(2, '0');
+      const endHours = String(endDate.getHours()).padStart(2, '0');
+      const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+      const endDateIsoLocal = `${endYear}-${endMonth}-${endDay}T${endHours}:${endMinutes}`;
+
+      if (endTimeInput) {
+        endTimeInput.min = nowIsoLocal;
+        endTimeInput.value = endDateIsoLocal;
+      }
     });
   }
 });
 
 function saveDutyAssignment(isWhatsApp) {
   const shiftName = document.getElementById('shiftName').value.trim();
+  const startTimeVal = document.getElementById('dutyStartTime').value;
+  const endTimeVal = document.getElementById('dutyEndTime').value;
   const userSelect = document.getElementById('dutyUser');
   const userId = userSelect.value;
   
@@ -165,6 +210,30 @@ function saveDutyAssignment(isWhatsApp) {
     alert('Please enter a Shift Name / Sector Title!');
     return;
   }
+  if (!startTimeVal) {
+    alert('Please select a Duty Start Date & Time!');
+    return;
+  }
+  if (!endTimeVal) {
+    alert('Please select a Duty End Date & Time!');
+    return;
+  }
+
+  const selectedStartTime = new Date(startTimeVal);
+  const selectedEndTime = new Date(endTimeVal);
+  const currentTime = new Date();
+  const currentTimeBuffer = new Date(currentTime.getTime() - 2 * 60 * 1000);
+
+  if (selectedStartTime < currentTimeBuffer) {
+    alert('⚠️ INVALID DATE / TIME!\nDuty Start Date & Time cannot be in the past. Please select current or future time.');
+    return;
+  }
+
+  if (selectedEndTime <= selectedStartTime) {
+    alert('⚠️ INVALID DATE / TIME!\nDuty End Time must be after Duty Start Time.');
+    return;
+  }
+
   if (!userId) {
     alert('Please select a Police Station Staff Officer!');
     return;
@@ -194,6 +263,9 @@ function saveDutyAssignment(isWhatsApp) {
     return;
   }
 
+  const startIso = selectedStartTime.toISOString();
+  const endIso = selectedEndTime.toISOString();
+
   fetch('/api/duties', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -202,11 +274,16 @@ function saveDutyAssignment(isWhatsApp) {
       userId: userId,
       stationInChargeId: stationInChargeId,
       checkpointsList: selectedCheckpointNames,
+      startTime: startIso,
+      endTime: endIso,
       smsStatus: 'Delivered',
       status: 'Assigned'
     })
   }).then(res => res.json())
   .then(data => {
+    const formattedStartTime = selectedStartTime.toLocaleString('en-IN', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+    const formattedEndTime = selectedEndTime.toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+
     // Generate formatted WhatsApp message text
     const waText = 
       "👮‍♂️ *POLICE STATION PATROL DUTY ALLOCATION*\n" +
@@ -216,6 +293,7 @@ function saveDutyAssignment(isWhatsApp) {
       "📱 *Mobile:* " + rawPhone + "\n" +
       "👮 *Assigned By Station In-Charge (SHO):* " + stationInChargeText + "\n" +
       "📅 *Shift Name:* " + shiftName + "\n" +
+      "⏰ *Duty Schedule:* " + formattedStartTime + " to " + formattedEndTime + "\n" +
       "📍 *Assigned Duty Points:*\n   • " + selectedCheckpointNames.replace(/,/g, "\n   • ") + "\n\n" +
       "🚨 *Instructions:* Please acknowledge receipt of this WhatsApp dispatch and report to your assigned points. Scan the checkpoint QR code upon arrival to update live GPS location.";
 
@@ -232,6 +310,7 @@ function saveDutyAssignment(isWhatsApp) {
         'MOBILE: ' + rawPhone + '\n' +
         'STATION IN-CHARGE: ' + stationInChargeText + '\n' +
         'SHIFT: ' + shiftName + '\n' +
+        'SCHEDULE: ' + formattedStartTime + ' to ' + formattedEndTime + '\n' +
         'DUTY POINTS: ' + selectedCheckpointNames + '\n\n' +
         'Status: DELIVERED TO POLICE STAFF MOBILE PHONE'
       );
