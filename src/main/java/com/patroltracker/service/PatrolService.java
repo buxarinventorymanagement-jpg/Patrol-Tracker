@@ -56,6 +56,15 @@ public class PatrolService {
         if (user.getPassword() == null || user.getPassword().isBlank()) {
             user.setPassword("guard123");
         }
+        if (user.getPhoneNumber() == null || user.getPhoneNumber().isBlank()) {
+            user.setPhoneNumber("+91-9876543210");
+        }
+        if (user.getBadgeNumber() == null || user.getBadgeNumber().isBlank()) {
+            user.setBadgeNumber("BG-" + (1000 + new Random().nextInt(8999)));
+        }
+        if (user.getRole() == null || user.getRole().isBlank()) {
+            user.setRole("Guard");
+        }
         if (user.getStatus() == null || user.getStatus().isBlank()) {
             user.setStatus("Active");
         }

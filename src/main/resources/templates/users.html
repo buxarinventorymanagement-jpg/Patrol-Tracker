@@ -10,11 +10,11 @@
         </div>
         <div class="d-flex gap-2">
             <!-- SP Admin Action: Create SHO -->
-            <button th:if="${isSPAdmin}" class="btn btn-danger btn-sm rounded-pill fw-bold px-3 shadow" data-bs-toggle="modal" data-bs-target="#newShoModal">
+            <button class="btn btn-danger btn-sm rounded-pill fw-bold px-3 shadow" data-bs-toggle="modal" data-bs-target="#newShoModal">
                 <i class="bi bi-shield-plus me-1"></i>Create SHO User (SP Admin)
             </button>
             <!-- SHO / SP Admin Action: Create Police Staff -->
-            <button th:if="${isSHO}" class="btn btn-primary btn-sm rounded-pill fw-bold px-3 shadow" data-bs-toggle="modal" data-bs-target="#newUserModal">
+            <button class="btn btn-primary btn-sm rounded-pill fw-bold px-3 shadow" data-bs-toggle="modal" data-bs-target="#newUserModal">
                 <i class="bi bi-person-plus-fill me-1"></i>Add Station Staff Member
             </button>
         </div>
@@ -79,7 +79,7 @@
     </div>
 
     <!-- Modal 1: SP Admin Creates Station House Officer (SHO) User -->
-    <div th:if="${isSPAdmin}" class="modal fade" id="newShoModal" tabindex="-1">
+    <div class="modal fade" id="newShoModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white border-danger">
                 <form id="shoForm" onsubmit="event.preventDefault(); saveShoUser(); return false;">
@@ -128,7 +128,7 @@
     </div>
 
     <!-- Modal 2: SHO / SP Admin Adds Police Station Staff Member -->
-    <div th:if="${isSHO}" class="modal fade" id="newUserModal" tabindex="-1">
+    <div class="modal fade" id="newUserModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white border-secondary">
                 <form id="userForm" onsubmit="event.preventDefault(); saveStaffUser(); return false;">
@@ -303,20 +303,26 @@ function saveEditedUser() {
 }
 
 function saveShoUser() {
-  const userIdInput = document.getElementById('shoUserId').value.trim();
-  const userId = userIdInput ? userIdInput.replace(/\s+/g, '_') : ('sho-' + Math.floor(Math.random()*8999+1000));
-  const name = document.getElementById('shoName').value.trim();
-  const designationVal = document.getElementById('shoDesignation').value.trim();
-  const designation = designationVal ? designationVal : 'Station House Officer (SHO)';
-  const phone = document.getElementById('shoPhone').value.trim();
-  const badgeNumber = document.getElementById('shoBadge').value.trim();
-  const password = document.getElementById('shoPassword').value;
-  const submitBtn = document.getElementById('shoSubmitBtn');
+  const nameEl = document.getElementById('shoName');
+  const name = nameEl ? nameEl.value.trim() : '';
 
-  if (!name || !phone || !badgeNumber) {
-    alert('Please complete all required fields (Name, Mobile Phone, and Badge Number)!');
+  if (!name) {
+    alert('Please enter Name for SHO Officer!');
+    if (nameEl) nameEl.focus();
     return;
   }
+
+  const userIdInput = document.getElementById('shoUserId') ? document.getElementById('shoUserId').value.trim() : '';
+  const userId = userIdInput ? userIdInput.replace(/\s+/g, '_') : ('sho_' + name.toLowerCase().replace(/\s+/g, '_') + '_' + Math.floor(Math.random()*899+100));
+  const designationVal = document.getElementById('shoDesignation') ? document.getElementById('shoDesignation').value.trim() : '';
+  const designation = designationVal ? designationVal : 'Station House Officer (SHO)';
+  const phoneVal = document.getElementById('shoPhone') ? document.getElementById('shoPhone').value.trim() : '';
+  const phone = phoneVal ? phoneVal : '+91-9876543210';
+  const badgeVal = document.getElementById('shoBadge') ? document.getElementById('shoBadge').value.trim() : '';
+  const badgeNumber = badgeVal ? badgeVal : ('SHO-BXR-' + Math.floor(Math.random()*8999+1000));
+  const passwordVal = document.getElementById('shoPassword') ? document.getElementById('shoPassword').value : '';
+  const password = passwordVal ? passwordVal : 'super123';
+  const submitBtn = document.getElementById('shoSubmitBtn');
 
   if (submitBtn) {
     submitBtn.disabled = true;
@@ -332,7 +338,7 @@ function saveShoUser() {
       designation: designation,
       phoneNumber: phone,
       badgeNumber: badgeNumber,
-      password: password ? password : 'super123',
+      password: password,
       role: 'Supervisor',
       status: 'Active'
     })
@@ -348,7 +354,7 @@ function saveShoUser() {
       const modal = bootstrap.Modal.getInstance(modalEl);
       if (modal) modal.hide();
     }
-    window.location.href = window.location.href;
+    window.location.reload();
   }).catch(err => {
     alert('❌ ERROR SAVING SHO USER: ' + err.message);
     if (submitBtn) {
@@ -359,23 +365,26 @@ function saveShoUser() {
 }
 
 function saveStaffUser() {
-  const userIdInput = document.getElementById('newUserId').value.trim();
-  const userId = userIdInput ? userIdInput.replace(/\s+/g, '_') : ('usr-' + Math.floor(Math.random()*8999+1000));
-  const name = document.getElementById('userName').value.trim();
-  const designation = document.getElementById('userDesignation').value;
-  const phone = document.getElementById('userPhone').value.trim();
-  const badgeNumber = document.getElementById('userBadge').value.trim();
-  const password = document.getElementById('userPassword').value;
-  const submitBtn = document.getElementById('staffSubmitBtn');
+  const nameEl = document.getElementById('userName');
+  const name = nameEl ? nameEl.value.trim() : '';
 
-  if (!name || !phone || !badgeNumber) {
-    alert('Please complete all required fields (Name, Mobile Phone, and Badge Number)!');
+  if (!name) {
+    alert('Please enter Name for Staff Member!');
+    if (nameEl) nameEl.focus();
     return;
   }
-  if (!designation) {
-    alert('Please select an Official Rank / Designation!');
-    return;
-  }
+
+  const userIdInput = document.getElementById('newUserId') ? document.getElementById('newUserId').value.trim() : '';
+  const userId = userIdInput ? userIdInput.replace(/\s+/g, '_') : ('usr_' + name.toLowerCase().replace(/\s+/g, '_') + '_' + Math.floor(Math.random()*899+100));
+  const desEl = document.getElementById('userDesignation');
+  const designation = (desEl && desEl.value) ? desEl.value : 'Constable (PC)';
+  const phoneVal = document.getElementById('userPhone') ? document.getElementById('userPhone').value.trim() : '';
+  const phone = phoneVal ? phoneVal : '+91-9876543210';
+  const badgeVal = document.getElementById('userBadge') ? document.getElementById('userBadge').value.trim() : '';
+  const badgeNumber = badgeVal ? badgeVal : ('PC-BXR-' + Math.floor(Math.random()*8999+1000));
+  const passwordVal = document.getElementById('userPassword') ? document.getElementById('userPassword').value : '';
+  const password = passwordVal ? passwordVal : 'guard123';
+  const submitBtn = document.getElementById('staffSubmitBtn');
 
   if (submitBtn) {
     submitBtn.disabled = true;
@@ -391,7 +400,7 @@ function saveStaffUser() {
       designation: designation,
       phoneNumber: phone,
       badgeNumber: badgeNumber,
-      password: password ? password : 'guard123',
+      password: password,
       role: 'Guard',
       status: 'Active'
     })
@@ -407,7 +416,7 @@ function saveStaffUser() {
       const modal = bootstrap.Modal.getInstance(modalEl);
       if (modal) modal.hide();
     }
-    window.location.href = window.location.href;
+    window.location.reload();
   }).catch(err => {
     alert('❌ ERROR SAVING STAFF MEMBER: ' + err.message);
     if (submitBtn) {
