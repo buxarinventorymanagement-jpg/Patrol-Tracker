@@ -22,10 +22,14 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @SuppressWarnings("null")
     public void run(String... args) throws Exception {
-        // Migration: Remove any occurrence of Anshuman Singh from existing database records
+        // Migration: Ensure thanaName is set for existing database users
         userRepository.findAll().forEach(u -> {
             if (u.getName() != null && u.getName().toLowerCase().contains("anshuman")) {
                 u.setName("Inspector Vikram Singh");
+                userRepository.save(u);
+            }
+            if (u.getThanaName() == null || u.getThanaName().isBlank()) {
+                u.setThanaName("Buxar Town Thana");
                 userRepository.save(u);
             }
         });

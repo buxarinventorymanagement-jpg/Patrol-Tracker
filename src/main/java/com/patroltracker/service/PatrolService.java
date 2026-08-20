@@ -327,9 +327,12 @@ public class PatrolService {
         User currentUser = currentUserOpt.get();
         if (currentUser.isStationHouseOfficer()) {
             String thana = currentUser.getThanaName();
-            if (thana == null || thana.isBlank()) return List.of(currentUser);
+            if (thana == null || thana.isBlank()) {
+                thana = "Buxar Town Thana";
+            }
+            final String targetThana = thana;
             return userRepository.findAll().stream()
-                    .filter(u -> thana.equalsIgnoreCase(u.getThanaName()))
+                    .filter(u -> u.getThanaName() == null || u.getThanaName().isBlank() || targetThana.equalsIgnoreCase(u.getThanaName().trim()) || u.getUserId().equalsIgnoreCase(userId))
                     .toList();
         }
         // Police Staff / Guard: Only sees self profile
