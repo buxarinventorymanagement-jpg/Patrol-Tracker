@@ -118,7 +118,7 @@
                     </div>
                     <div class="modal-footer border-danger">
                         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" id="shoSubmitBtn" class="btn btn-danger btn-sm fw-bold px-3 shadow" onclick="saveShoUser()">
+                        <button type="submit" id="shoSubmitBtn" class="btn btn-danger btn-sm fw-bold px-3 shadow">
                             <i class="bi bi-shield-check me-1"></i>Register SHO User
                         </button>
                     </div>
@@ -175,7 +175,7 @@
                     </div>
                     <div class="modal-footer border-secondary">
                         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" id="staffSubmitBtn" class="btn btn-primary btn-sm fw-bold px-3" onclick="saveStaffUser()">
+                        <button type="submit" id="staffSubmitBtn" class="btn btn-primary btn-sm fw-bold px-3">
                             <i class="bi bi-check-circle-fill me-1"></i>Register Staff Member
                         </button>
                     </div>
@@ -227,8 +227,6 @@
             </div>
         </div>
     </div>
-
-</div>
 
 <script th:inline="javascript">
 document.addEventListener('DOMContentLoaded', function () {
@@ -289,12 +287,21 @@ function saveEditedUser() {
       role: role,
       status: 'Active'
     })
-  }).then(res => res.json())
-  .then(data => {
+  }).then(res => {
+    if (!res.ok) {
+      return res.text().then(text => { throw new Error(text || 'Server error updating user profile'); });
+    }
+    return res.json();
+  }).then(data => {
     alert('✓ OFFICER PROFILE UPDATED SUCCESSFULLY!\nName: ' + name);
+    const modalEl = document.getElementById('editOfficerModal');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+    }
     window.location.reload();
   }).catch(err => {
-    alert('Error updating profile: ' + err);
+    alert('❌ Error updating profile: ' + err.message);
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Save Profile Changes';
@@ -454,18 +461,24 @@ function deleteUserRecord(btn) {
     fetch('/api/users/' + encodeURIComponent(userId), {
       method: 'DELETE'
     })
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) {
+        return res.text().then(text => { throw new Error(text || 'Server error deleting user'); });
+      }
+      return res.json();
+    })
     .then(data => {
       alert('✓ USER DELETED SUCCESSFULLY: ' + name);
-      window.location.href = window.location.href;
+      window.location.reload();
     })
     .catch(err => {
-      alert('❌ Error deleting user: ' + err);
+      alert('❌ Error deleting user: ' + err.message);
       btn.disabled = false;
       btn.innerHTML = '<i class="bi bi-trash-fill me-1"></i>Delete';
     });
   }
 }
 </script>
+</div>
 </body>
 </html>

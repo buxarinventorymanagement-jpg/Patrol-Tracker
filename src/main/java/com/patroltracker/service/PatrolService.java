@@ -86,9 +86,16 @@ public class PatrolService {
     @Transactional
     public boolean deleteUser(String userId) {
         if (userId != null && userRepository.existsById(userId)) {
-            userRepository.deleteById(userId);
-            System.out.println(" 🗑️ USER DELETED FROM DATABASE: " + userId);
-            return true;
+            try {
+                scanLogRepository.findByUserIdOrderByScanTimeDesc(userId).forEach(s -> scanLogRepository.delete(s));
+                dutyAllocationRepository.findByUserId(userId).forEach(d -> dutyAllocationRepository.delete(d));
+                userRepository.deleteById(userId);
+                System.out.println(" 🗑️ USER DELETED FROM DATABASE: " + userId);
+                return true;
+            } catch (Exception e) {
+                System.err.println(" ❌ ERROR DELETING USER " + userId + ": " + e.getMessage());
+                return false;
+            }
         }
         return false;
     }
