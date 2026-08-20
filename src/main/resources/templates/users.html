@@ -8,13 +8,13 @@
             <h5 class="m-0 text-white fw-bold"><i class="bi bi-shield-lock-fill text-info me-2"></i>Police Station Roster & Staff Directory</h5>
             <small class="text-secondary fw-semibold">District command hierarchy, Station House Officers (SHO) & police station staff</small>
         </div>
-        <div th:if="${isSPAdmin}" class="d-flex gap-2">
-            <!-- SP Admin Action: Create SHO -->
-            <button class="btn btn-danger btn-sm rounded-pill fw-bold px-3 shadow" data-bs-toggle="modal" data-bs-target="#newShoModal">
+        <div class="d-flex gap-2">
+            <!-- SP Admin Action: Create SHO User Only -->
+            <button th:if="${isSPAdmin}" class="btn btn-danger btn-sm rounded-pill fw-bold px-3 shadow" data-bs-toggle="modal" data-bs-target="#newShoModal">
                 <i class="bi bi-shield-plus me-1"></i>Create SHO User (SP Admin)
             </button>
-            <!-- SP Admin Action: Create Police Staff -->
-            <button class="btn btn-primary btn-sm rounded-pill fw-bold px-3 shadow" data-bs-toggle="modal" data-bs-target="#newUserModal">
+            <!-- SHO / SP Admin Action: Add Station Staff Member -->
+            <button th:if="${isSPAdmin or isSHO}" class="btn btn-primary btn-sm rounded-pill fw-bold px-3 shadow" data-bs-toggle="modal" data-bs-target="#newUserModal">
                 <i class="bi bi-person-plus-fill me-1"></i>Add Station Staff Member
             </button>
         </div>
@@ -227,8 +227,7 @@
                     </div>
                 </form>
             </div>
-        </div>
-    </div>
+    <input type="hidden" id="activeThanaName" th:value="${activeUser != null ? activeUser.thanaName : 'Buxar Town Thana'}">
 
 <script th:inline="javascript">
 document.addEventListener('DOMContentLoaded', function () {
@@ -398,7 +397,8 @@ function saveStaffUser() {
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Registering...';
-  }
+  const thanaNameEl = document.getElementById('activeThanaName');
+  const thanaName = thanaNameEl ? thanaNameEl.value : 'Buxar Town Thana';
 
   fetch('/api/users', {
     method: 'POST',
@@ -410,6 +410,7 @@ function saveStaffUser() {
       phoneNumber: phone,
       badgeNumber: badgeNumber,
       password: password,
+      thanaName: thanaName,
       role: 'Guard',
       status: 'Active'
     })
