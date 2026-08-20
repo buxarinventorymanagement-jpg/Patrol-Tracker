@@ -220,8 +220,8 @@ public class PatrolService {
         log.setLatitude(lat != null ? lat : checkpoint.getLatitude());
         log.setLongitude(lng != null ? lng : checkpoint.getLongitude());
         log.setNotes(notes);
-
-        scanLogRepository.save(log);
+        log.setQrId(checkpoint.getQrCodeData());
+        log.setPatrolStatus("Duty Verified - Live On Patrol");
 
         // Update user status if guard & dispatch live GPS scan SMS alert
         User guard = null;
@@ -231,8 +231,14 @@ public class PatrolService {
                 guard = guardOpt.get();
                 guard.setStatus("On Patrol");
                 userRepository.save(guard);
+                log.setThanaName(guard.getThanaName());
             }
         }
+        if (log.getThanaName() == null || log.getThanaName().isBlank()) {
+            log.setThanaName("Buxar Town Thana");
+        }
+
+        scanLogRepository.save(log);
 
         // Trigger Live Scan Mobile SMS & Map Visibility alert
         Map<String, String> smsLog = notificationService.sendLiveScanGpsSms(guard, checkpoint, log.getLatitude(), log.getLongitude());
@@ -254,6 +260,15 @@ public class PatrolService {
         }
         if (scanLog.getScanTime() == null) {
             scanLog.setScanTime(OffsetDateTime.now());
+        }
+        if ((scanLog.getThanaName() == null || scanLog.getThanaName().isBlank()) && scanLog.getUserId() != null) {
+            userRepository.findById(scanLog.getUserId()).ifPresent(u -> scanLog.setThanaName(u.getThanaName()));
+        }
+        if (scanLog.getUserId() != null) {
+            userRepository.findById(scanLog.getUserId()).ifPresent(u -> {
+                u.setStatus("On Patrol");
+                userRepository.save(u);
+            });
         }
         return scanLogRepository.save(scanLog);
     }
@@ -404,5 +419,54 @@ public class PatrolService {
     // Archive Logs
     public List<ArchiveLog> getAllArchives() {
         return archiveLogRepository.findAllByOrderByArchivedAtDesc();
+    }
+
+    // Map Data Scoping for Admin & SHO
+    public Map<String, Object> getMapDataForUser(String userId) {
+        Map<String, Object> mapData = new HashMap<>();
+        List<ScanLog> logs = getScanLogsForUser(userId);
+        List<Checkpoint> checkpoints = getAllCheckpoints();
+        List<User> users = getUsersForUser(userId);
+
+        Map<String, ScanLog> latestScanByGuard = new HashMap<>();
+        for (ScanLog log : logs) {
+            if (log.getUserId() != null && !latestScanByGuard.containsKey(log.getUserId())) {
+                latestScanByGuard.put(log.getUserId(), log);
+            }
+        }
+
+        List<Map<String, Object>> liveGuardMarkers = new ArrayList<>();
+        for (User u : users) {
+            ScanLog latest = latestScanByGuard.get(u.getUserId());
+            Map<String, Object> marker = new HashMap<>();
+            marker.put("userId", u.getUserId());
+            marker.put("name", u.getName());
+            marker.put("rank", u.getDesignation());
+            marker.put("badge", u.getBadgeNumber());
+            marker.put("thanaName", u.getThanaName());
+            marker.put("status", u.getStatus());
+            marker.put("phone", u.getPhoneNumber());
+            if (latest != null && latest.getLatitude() != null && latest.getLongitude() != null) {
+                marker.put("lat", latest.getLatitude());
+                marker.put("lng", latest.getLongitude());
+                marker.put("checkpointId", latest.getCheckpointId());
+                marker.put("scanId", latest.getScanId());
+                marker.put("scanTime", latest.getScanTime());
+                marker.put("scanStatus", latest.getStatus());
+                marker.put("notes", latest.getNotes());
+                marker.put("hasLiveScan", true);
+            } else {
+                marker.put("hasLiveScan", false);
+            }
+            liveGuardMarkers.add(marker);
+        }
+
+        mapData.put("checkpoints", checkpoints);
+        mapData.put("scanLogs", logs);
+        mapData.put("liveGuardMarkers", liveGuardMarkers);
+        mapData.put("isSPAdmin", isSuperintendentOfPolice(userId));
+        mapData.put("isSHO", isStationHouseOfficer(userId));
+
+        return mapData;
     }
 }

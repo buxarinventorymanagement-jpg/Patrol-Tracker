@@ -144,4 +144,11 @@ public class PatrolApiController {
     public ResponseEntity<List<Map<String, String>>> getDispatchedSms() {
         return ResponseEntity.ok(notificationService.getDispatchedSmsLogs());
     }
+
+    // Live Map Data for Admin & SHO Tracking
+    @GetMapping("/map-data")
+    public ResponseEntity<Map<String, Object>> getMapData(@RequestParam(name = "userId", required = false) String userId) {
+        String activeUser = (userId != null && !userId.isBlank()) ? userId : "usr-001";
+        return ResponseEntity.ok(patrolService.getMapDataForUser(activeUser));
+    }
 }

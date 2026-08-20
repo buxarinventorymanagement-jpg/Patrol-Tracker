@@ -148,6 +148,9 @@ let allMapItems = [];
 const DEFAULT_MAP_CENTER = [25.564700, 83.977700];
 const DEFAULT_MAP_ZOOM = 14;
 
+let liveGuardMarkersGroup = null;
+let mapRefreshInterval = null;
+
 function initPatrolMap() {
   const mapElement = document.getElementById('patrol-map');
   if (!mapElement) return;
@@ -193,56 +196,119 @@ function initPatrolMap() {
     });
   }
 
-  // Fetch Checkpoints and Scan Logs to seed demo Status items
-  Promise.all([
-    fetch('/api/checkpoints').then(res => res.json()),
-    fetch('/api/scan-logs').then(res => res.json())
-  ]).then(([checkpoints, scanLogs]) => {
-    const scannedCheckpointIds = new Set(scanLogs.map(l => l.checkpointId));
-    allMapItems = [];
+  fetchAndRenderLiveMap();
 
-    // Map existing checkpoints with 3 Status Classifications
-    checkpoints.forEach((chk, index) => {
-      if (chk.latitude && chk.longitude) {
-        const isScanned = scannedCheckpointIds.has(chk.checkpointId) || scannedCheckpointIds.has(chk.qrCodeData);
-        let classification = 'QR Not Scanned';
-        let details = 'Checkpoint QR not scanned - Red Alert';
-        
-        if (isScanned) {
-          classification = 'Duty Verified';
-          details = 'Scan completed & verified on time';
-        } else if (index % 2 === 0) {
-          classification = 'Guard Present';
-          details = 'Guard present on duty - Scan pending';
+  // Real-time 8-second auto refresh for Admin & SHO dashboards
+  if (mapRefreshInterval) clearInterval(mapRefreshInterval);
+  mapRefreshInterval = setInterval(() => {
+    fetchAndRenderLiveMap();
+  }, 8000);
+}
+
+function fetchAndRenderLiveMap() {
+  const userSelect = document.getElementById('activeUserSelect');
+  const activeUser = userSelect ? userSelect.value : (localStorage.getItem('patrol_active_user') || 'usr-001');
+
+  fetch(`/api/map-data?userId=${encodeURIComponent(activeUser)}`)
+    .then(res => res.json())
+    .then(mapData => {
+      const checkpoints = mapData.checkpoints || [];
+      const scanLogs = mapData.scanLogs || [];
+      const liveGuards = mapData.liveGuardMarkers || [];
+      const scannedCheckpointIds = new Set(scanLogs.map(l => l.checkpointId));
+
+      allMapItems = [];
+
+      // Map existing checkpoints with 3 Status Classifications
+      checkpoints.forEach((chk, index) => {
+        if (chk.latitude && chk.longitude) {
+          const isScanned = scannedCheckpointIds.has(chk.checkpointId) || scannedCheckpointIds.has(chk.qrCodeData);
+          let classification = 'QR Not Scanned';
+          let details = 'Checkpoint QR not scanned - Red Alert';
+          
+          if (isScanned) {
+            classification = 'Duty Verified';
+            details = 'Scan completed & verified on time';
+          } else if (index % 2 === 0) {
+            classification = 'Guard Present';
+            details = 'Guard present on duty - Scan pending';
+          }
+
+          allMapItems.push({
+            id: chk.checkpointId,
+            name: chk.name,
+            lat: parseFloat(chk.latitude),
+            lng: parseFloat(chk.longitude),
+            type: 'Checkpoint',
+            classification: classification,
+            qrCodeData: chk.qrCodeData,
+            details: details
+          });
         }
+      });
 
-        allMapItems.push({
-          id: chk.checkpointId,
-          name: chk.name,
-          lat: parseFloat(chk.latitude),
-          lng: parseFloat(chk.longitude),
-          type: 'Checkpoint',
-          classification: classification,
-          qrCodeData: chk.qrCodeData,
-          details: details
-        });
-      }
+      // Sample Patrol Points
+      const demoStatusPoints = [
+        { id: 'chk-201', name: 'Buxar Railway Station Post', lat: 25.560000, lng: 83.970000, type: 'Checkpoint', classification: 'Duty Verified', qrCodeData: 'QR-RLWY-201', details: 'Duty Verified & Scanned' },
+        { id: 'chk-202', name: 'Collectorate Gate Checkpoint', lat: 25.568000, lng: 83.980000, type: 'Checkpoint', classification: 'Guard Present', qrCodeData: 'QR-COLL-202', details: 'Guard Present on Duty - Scan Pending' },
+        { id: 'chk-203', name: 'Simri Highway Patrol Point', lat: 25.630000, lng: 84.100000, type: 'Checkpoint', classification: 'QR Not Scanned', qrCodeData: 'QR-HWY-203', details: 'Checkpoint QR Not Scanned - Red Alert' },
+        { id: 'chk-204', name: 'Dumraon Sector Post', lat: 25.553000, lng: 84.150000, type: 'Checkpoint', classification: 'Guard Present', qrCodeData: 'QR-DUM-204', details: 'Guard Present on Duty - Scan Pending' },
+        { id: 'chk-205', name: 'Kochas Border Outpost', lat: 25.380000, lng: 83.950000, type: 'Checkpoint', classification: 'QR Not Scanned', qrCodeData: 'QR-KCH-205', details: 'Checkpoint QR Not Scanned - Red Alert' }
+      ];
+
+      allMapItems.push(...demoStatusPoints);
+
+      renderMapItems(allMapItems);
+      renderLiveGuardMarkers(liveGuards);
+    })
+    .catch(err => {
+      console.error('Error fetching live map data:', err);
     });
+}
 
-    // Additional sample Patrol Points showing all 3 statuses (Duty Verified, Guard Present, QR Not Scanned)
-    const demoStatusPoints = [
-      { id: 'chk-201', name: 'Buxar Railway Station Post', lat: 25.560000, lng: 83.970000, type: 'Checkpoint', classification: 'Duty Verified', qrCodeData: 'QR-RLWY-201', details: 'Duty Verified & Scanned' },
-      { id: 'chk-202', name: 'Collectorate Gate Checkpoint', lat: 25.568000, lng: 83.980000, type: 'Checkpoint', classification: 'Guard Present', qrCodeData: 'QR-COLL-202', details: 'Guard Present on Duty - Scan Pending' },
-      { id: 'chk-203', name: 'Simri Highway Patrol Point', lat: 25.630000, lng: 84.100000, type: 'Checkpoint', classification: 'QR Not Scanned', qrCodeData: 'QR-HWY-203', details: 'Checkpoint QR Not Scanned - Red Alert' },
-      { id: 'chk-204', name: 'Dumraon Sector Post', lat: 25.553000, lng: 84.150000, type: 'Checkpoint', classification: 'Guard Present', qrCodeData: 'QR-DUM-204', details: 'Guard Present on Duty - Scan Pending' },
-      { id: 'chk-205', name: 'Kochas Border Outpost', lat: 25.380000, lng: 83.950000, type: 'Checkpoint', classification: 'QR Not Scanned', qrCodeData: 'QR-KCH-205', details: 'Checkpoint QR Not Scanned - Red Alert' }
-    ];
+function renderLiveGuardMarkers(liveGuards) {
+  if (!patrolMap) return;
 
-    allMapItems.push(...demoStatusPoints);
+  if (!liveGuardMarkersGroup) {
+    liveGuardMarkersGroup = L.layerGroup().addTo(patrolMap);
+  } else {
+    liveGuardMarkersGroup.clearLayers();
+  }
 
-    renderMapItems(allMapItems);
-  }).catch(err => {
-    console.error('Error initializing strategic map items:', err);
+  if (!liveGuards || liveGuards.length === 0) return;
+
+  liveGuards.forEach(g => {
+    if (g.hasLiveScan && g.lat && g.lng) {
+      const lat = parseFloat(g.lat);
+      const lng = parseFloat(g.lng);
+
+      const guardMarker = L.circleMarker([lat, lng], {
+        radius: 15,
+        fillColor: '#10b981',
+        color: '#ffffff',
+        weight: 3,
+        opacity: 1,
+        fillOpacity: 0.95
+      });
+
+      const formattedTime = g.scanTime ? new Date(g.scanTime).toLocaleTimeString() : 'Just Now';
+
+      guardMarker.bindPopup(`
+        <div style="font-family: Inter, sans-serif; color: #0f172a; padding: 6px; min-width: 220px;">
+          <div style="background: #10b981; color: #fff; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px;">
+            🚔 GUARD LIVE GPS VERIFIED
+          </div>
+          <h6 style="margin: 0 0 4px 0; font-weight: 800; color: #047857; font-size: 0.95rem;">${g.name || 'Police Guard'}</h6>
+          <div style="font-size: 0.8rem; color: #1e293b; margin-bottom: 3px;"><strong>Rank:</strong> ${g.rank || 'Constable'}</div>
+          <div style="font-size: 0.8rem; color: #1e293b; margin-bottom: 3px;"><strong>Thana:</strong> ${g.thanaName || 'Buxar Town Thana'}</div>
+          <div style="font-size: 0.8rem; color: #1e293b; margin-bottom: 3px;"><strong>Badge:</strong> ${g.badge || 'BG-1001'}</div>
+          <div style="font-size: 0.8rem; color: #059669; font-weight: 700; margin-bottom: 3px;">Status: ${g.scanStatus || 'Duty Verified'}</div>
+          <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)} (${formattedTime})</div>
+        </div>
+      `);
+
+      liveGuardMarkersGroup.addLayer(guardMarker);
+    }
   });
 }
 
@@ -304,41 +370,6 @@ function renderMapItems(items) {
       maxZoom: 17,
       gradient: { 0.4: 'blue', 0.65: 'lime', 1: 'red' }
     }).addTo(patrolMap);
-  }
-
-  // Render Live Guard GPS Scan Marker if present in localStorage
-  try {
-    const rawScan = localStorage.getItem('patrol_last_live_scan');
-    if (rawScan) {
-      const liveScan = JSON.parse(rawScan);
-      if (liveScan && liveScan.latitude && liveScan.longitude) {
-        const guardLat = parseFloat(liveScan.latitude);
-        const guardLng = parseFloat(liveScan.longitude);
-
-        const liveGuardMarker = L.circleMarker([guardLat, guardLng], {
-          radius: 15,
-          fillColor: '#10b981',
-          color: '#ffffff',
-          weight: 3,
-          opacity: 1,
-          fillOpacity: 1
-        }).addTo(patrolMap);
-
-        liveGuardMarker.bindPopup(`
-          <div style="font-family: Inter, sans-serif; color: #0f172a; padding: 6px;">
-            <div style="background: #10b981; color: #fff; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 6px;">
-              📍 LIVE GUARD GPS VISIBLE
-            </div>
-            <h6 style="margin: 0 0 4px 0; font-weight: 700; color: #059669;">${liveScan.guardName}</h6>
-            <div style="font-size: 0.8rem; margin-bottom: 4px;"><strong>Reached Duty Point:</strong> ${liveScan.checkpointName}</div>
-            <div style="font-size: 0.75rem; color: #059669; font-weight: 600;">Status: VERIFIED GREEN</div>
-            <div style="font-size: 0.72rem; color: #64748b; margin-top: 4px;">GPS: ${guardLat.toFixed(6)}, ${guardLng.toFixed(6)} (${liveScan.scannedAt || 'Just Now'})</div>
-          </div>
-        `).openPopup();
-      }
-    }
-  } catch (err) {
-    console.error('Error rendering live guard marker:', err);
   }
 
   // Update Analysis Count and District Summary Breakdown

@@ -133,15 +133,19 @@ function showQRModal(qrData, name) {
 
 function saveCheckpoint() {
   const name = document.getElementById('chkName').value.trim();
-  const qrCodeData = document.getElementById('chkQr').value.trim();
+  let qrCodeData = document.getElementById('chkQr').value.trim();
   const lat = document.getElementById('chkLat').value;
   const lng = document.getElementById('chkLng').value;
   const interval = document.getElementById('chkInterval').value;
   const instructions = document.getElementById('chkInstructions').value.trim();
 
-  if (!name || !qrCodeData || !lat || !lng) {
-    alert('Please complete all required fields (Name, QR Code Data, Latitude, Longitude)!');
+  if (!name || !lat || !lng) {
+    alert('Please complete required fields (Checkpoint Name, Latitude, Longitude)!');
     return;
+  }
+
+  if (!qrCodeData) {
+    qrCodeData = 'QR-' + name.toUpperCase().replace(/[^A-Z0-9]/g, '-') + '-' + Math.floor(Math.random()*899+100);
   }
 
   fetch('/api/checkpoints', {
