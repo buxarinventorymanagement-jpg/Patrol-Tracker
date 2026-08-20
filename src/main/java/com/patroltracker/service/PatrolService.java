@@ -68,6 +68,9 @@ public class PatrolService {
         if (user.getStatus() == null || user.getStatus().isBlank()) {
             user.setStatus("Active");
         }
+        if (user.getThanaName() == null || user.getThanaName().isBlank()) {
+            user.setThanaName("Buxar Town Thana");
+        }
         User saved = userRepository.save(user);
 
         System.out.println("\n=======================================================");
@@ -266,24 +269,61 @@ public class PatrolService {
     }
 
     public List<ScanLog> getScanLogsForUser(String userId) {
-        if (isStationHouseOfficer(userId)) {
+        if (isSuperintendentOfPolice(userId)) {
             return scanLogRepository.findAllByOrderByScanTimeDesc();
         }
+        Optional<User> currentUserOpt = userRepository.findById(userId);
+        if (currentUserOpt.isEmpty()) {
+            return Collections.emptyList();
+        }
+        User currentUser = currentUserOpt.get();
+        if (currentUser.isStationHouseOfficer()) {
+            List<String> thanaUserIds = getUsersForUser(userId).stream().map(User::getUserId).toList();
+            return scanLogRepository.findAllByOrderByScanTimeDesc().stream()
+                    .filter(s -> thanaUserIds.contains(s.getUserId()))
+                    .toList();
+        }
+        // Guard / Staff: Only sees own scan logs
         return scanLogRepository.findByUserIdOrderByScanTimeDesc(userId);
     }
 
     public List<DutyAllocation> getDutiesForUser(String userId) {
-        if (isStationHouseOfficer(userId)) {
+        if (isSuperintendentOfPolice(userId)) {
             return dutyAllocationRepository.findAll();
         }
+        Optional<User> currentUserOpt = userRepository.findById(userId);
+        if (currentUserOpt.isEmpty()) {
+            return Collections.emptyList();
+        }
+        User currentUser = currentUserOpt.get();
+        if (currentUser.isStationHouseOfficer()) {
+            List<String> thanaUserIds = getUsersForUser(userId).stream().map(User::getUserId).toList();
+            return dutyAllocationRepository.findAll().stream()
+                    .filter(d -> (d.getStationInChargeId() != null && d.getStationInChargeId().equalsIgnoreCase(userId)) || thanaUserIds.contains(d.getUserId()))
+                    .toList();
+        }
+        // Guard / Staff: Only sees duties assigned to self
         return dutyAllocationRepository.findByUserId(userId);
     }
 
     public List<User> getUsersForUser(String userId) {
-        if (isStationHouseOfficer(userId)) {
+        if (isSuperintendentOfPolice(userId)) {
             return userRepository.findAll();
         }
-        return userRepository.findById(userId).map(List::of).orElseGet(Collections::emptyList);
+        Optional<User> currentUserOpt = userRepository.findById(userId);
+        if (currentUserOpt.isEmpty()) {
+            return Collections.emptyList();
+        }
+        User currentUser = currentUserOpt.get();
+        if (currentUser.isStationHouseOfficer()) {
+            String thana = currentUser.getThanaName();
+            if (thana == null || thana.isBlank()) return List.of(currentUser);
+            return userRepository.findAll().stream()
+                    .filter(u -> thana.equalsIgnoreCase(u.getThanaName()))
+                    .toList();
+        }
+        // Police Staff / Guard: Only sees self profile
+        return List.of(currentUser);
     }
 
     public List<ArchiveLog> getArchivesForUser(String userId) {

@@ -187,7 +187,7 @@ public class PatrolWebController {
         populateCommonModel(model, activeUserId);
 
         model.addAttribute("activeTab", "user");
-        model.addAttribute("users", patrolService.getAllUsers());
+        model.addAttribute("users", patrolService.getUsersForUser(activeUserId));
 
         return "users";
     }

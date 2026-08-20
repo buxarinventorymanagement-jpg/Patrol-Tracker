@@ -32,6 +32,9 @@ public class User {
     @Column(length = 50)
     private String status; // Active, On Patrol, Off Duty
 
+    @Column(name = "thana_name", length = 128)
+    private String thanaName = "Buxar Town Thana";
+
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
@@ -64,6 +67,19 @@ public class User {
         this(userId, name, role, badgeNumber, "password123", "+91-9876543210", designation, status);
     }
 
+    public User(String userId, String name, String role, String badgeNumber, String password, String phoneNumber, String designation, String thanaName, String status) {
+        this.userId = userId;
+        this.name = name;
+        this.role = role;
+        this.badgeNumber = badgeNumber;
+        this.password = password != null ? password : "password123";
+        this.phoneNumber = phoneNumber != null ? phoneNumber : "+91-9876543210";
+        this.designation = designation != null ? designation : "Constable (PC)";
+        this.thanaName = thanaName != null && !thanaName.isBlank() ? thanaName : "Buxar Town Thana";
+        this.status = status;
+        this.createdAt = OffsetDateTime.now();
+    }
+
     // Getters and Setters
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
@@ -85,6 +101,9 @@ public class User {
 
     public String getDesignation() { return designation; }
     public void setDesignation(String designation) { this.designation = designation; }
+
+    public String getThanaName() { return thanaName; }
+    public void setThanaName(String thanaName) { this.thanaName = thanaName; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

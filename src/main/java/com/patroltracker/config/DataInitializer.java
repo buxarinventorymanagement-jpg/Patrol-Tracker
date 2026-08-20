@@ -35,11 +35,11 @@ public class DataInitializer implements CommandLineRunner {
 
             // Seed Initial Clean Command Accounts (SP Admin, SHO, & Police Staff)
             userRepository.saveAll(List.of(
-                new User("sp-admin", "Dr. Rajesh Kumar, IPS", "Admin", "SP-0001", "sp123", "+91-9990001112", "Superintendent of Police (SP)", "Active"),
-                new User("usr-003", "Inspector Vikram Singh", "Supervisor", "SHO-1001", "super123", "+91-9998887770", "Station House Officer (SHO)", "Active"),
-                new User("usr-001", "Constable Ramesh Sharma", "Guard", "PC-1001", "guard123", "+91-9876543210", "Constable (PC)", "Active"),
-                new User("usr-002", "Constable Amit Verma", "Guard", "PC-1002", "guard123", "+91-9876543211", "Constable (PC)", "Active"),
-                new User("Patrol Tracker", "District Police Monitor", "Admin", "ADM-8800", "BXRadmin123", "+91-9990001112", "Superintendent of Police (SP)", "Active")
+                new User("sp-admin", "Dr. Rajesh Kumar, IPS", "Admin", "SP-0001", "sp123", "+91-9990001112", "Superintendent of Police (SP)", "District Police HQ", "Active"),
+                new User("usr-003", "Inspector Vikram Singh", "Supervisor", "SHO-1001", "super123", "+91-9998887770", "Station House Officer (SHO)", "Buxar Town Thana", "Active"),
+                new User("usr-001", "Constable Ramesh Sharma", "Guard", "PC-1001", "guard123", "+91-9876543210", "Constable (PC)", "Buxar Town Thana", "Active"),
+                new User("usr-002", "Constable Amit Verma", "Guard", "PC-1002", "guard123", "+91-9876543211", "Constable (PC)", "Buxar Industrial Thana", "Active"),
+                new User("Patrol Tracker", "District Police Monitor", "Admin", "ADM-8800", "BXRadmin123", "+91-9990001112", "Superintendent of Police (SP)", "District Police HQ", "Active")
             ));
 
             // Seed Checkpoints

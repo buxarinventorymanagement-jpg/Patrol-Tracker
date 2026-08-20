@@ -8,12 +8,12 @@
             <h5 class="m-0 text-white fw-bold"><i class="bi bi-shield-lock-fill text-info me-2"></i>Police Station Roster & Staff Directory</h5>
             <small class="text-secondary fw-semibold">District command hierarchy, Station House Officers (SHO) & police station staff</small>
         </div>
-        <div class="d-flex gap-2">
+        <div th:if="${isSPAdmin}" class="d-flex gap-2">
             <!-- SP Admin Action: Create SHO -->
             <button class="btn btn-danger btn-sm rounded-pill fw-bold px-3 shadow" data-bs-toggle="modal" data-bs-target="#newShoModal">
                 <i class="bi bi-shield-plus me-1"></i>Create SHO User (SP Admin)
             </button>
-            <!-- SHO / SP Admin Action: Create Police Staff -->
+            <!-- SP Admin Action: Create Police Staff -->
             <button class="btn btn-primary btn-sm rounded-pill fw-bold px-3 shadow" data-bs-toggle="modal" data-bs-target="#newUserModal">
                 <i class="bi bi-person-plus-fill me-1"></i>Add Station Staff Member
             </button>
@@ -36,6 +36,7 @@
                             <div class="mt-1 d-flex gap-1 flex-wrap align-items-center">
                                 <span class="badge bg-info text-dark font-monospace fw-bold" th:text="${u.designation != null ? u.designation : 'Constable (PC)'}">Sub-Inspector (SI)</span>
                                 <span class="badge bg-secondary font-monospace" th:text="'Badge: ' + ${u.badgeNumber}">BG-9921</span>
+                                <span class="badge bg-dark border border-info text-cyan font-monospace" th:text="${u.thanaName != null ? u.thanaName : 'Buxar Town Thana'}">Buxar Town Thana</span>
                             </div>
                             <div class="small text-cyan mt-1 fw-bold"><i class="bi bi-phone-fill me-1"></i><span th:text="${u.phoneNumber}">+91-9876543210</span></div>
                         </div>
@@ -47,7 +48,7 @@
                         <div class="small text-emerald mt-1 fw-bold"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem;"></i><span th:text="${u.status}">Active</span></div>
                         
                         <!-- Action Buttons: Edit Profile & WhatsApp -->
-                        <div class="d-flex gap-1 mt-2 flex-wrap justify-content-end">
+                        <div class="d-flex gap-1 mt-2 flex-wrap justify-end">
                             <button th:if="${isSPAdmin or u.userId == activeUserId}" 
                                     th:data-id="${u.userId}"
                                     th:data-name="${u.name}"
@@ -55,12 +56,13 @@
                                     th:data-phone="${u.phoneNumber}"
                                     th:data-badge="${u.badgeNumber}"
                                     th:data-role="${u.role}"
+                                    th:data-thana="${u.thanaName}"
                                     class="btn btn-outline-warning btn-sm py-0 px-2" 
                                     onclick="openEditOfficerModal(this)" 
                                     title="Edit Officer Name & Details">
                                 <i class="bi bi-pencil-square me-1"></i>Edit
                             </button>
-                            <button th:if="${isSPAdmin or isSHO}" 
+                            <button th:if="${isSPAdmin}" 
                                     th:data-id="${u.userId}"
                                     th:data-name="${u.name}"
                                     class="btn btn-outline-danger btn-sm py-0 px-2" 

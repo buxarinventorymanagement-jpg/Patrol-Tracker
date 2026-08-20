@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS user_table (
     password VARCHAR(255) DEFAULT 'guard123',
     phone_number VARCHAR(50) DEFAULT '+91-9876543210',
     designation VARCHAR(100) DEFAULT 'Constable (PC)',
+    thana_name VARCHAR(128) DEFAULT 'Buxar Town Thana',
     status VARCHAR(50) DEFAULT 'Active',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
