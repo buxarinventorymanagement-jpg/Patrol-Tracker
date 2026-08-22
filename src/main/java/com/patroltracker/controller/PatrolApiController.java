@@ -119,6 +119,27 @@ public class PatrolApiController {
         return ResponseEntity.ok(patrolService.saveUser(user));
     }
 
+    // Reset User Password
+    @PostMapping("/users/reset-password")
+    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody Map<String, String> body) {
+        String userId = body.get("userId");
+        String newPassword = body.get("newPassword");
+
+        Optional<User> updatedUser = patrolService.resetPassword(userId, newPassword);
+        if (updatedUser.isPresent()) {
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Password reset successfully for user: " + userId,
+                "userId", userId
+            ));
+        } else {
+            return ResponseEntity.status(400).body(Map.of(
+                "success", false,
+                "message", "Failed to reset password. User not found or invalid password."
+            ));
+        }
+    }
+
     // Delete user
     @DeleteMapping("/users/{userId}")
     public ResponseEntity<Map<String, Object>> deleteUser(@PathVariable("userId") String userId) {

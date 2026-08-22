@@ -47,8 +47,18 @@
                         <span th:if="${!u.isStationHouseOfficer()}" class="badge bg-success text-white">Police Personnel</span>
                         <div class="small text-emerald mt-1 fw-bold"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem;"></i><span th:text="${u.status}">Active</span></div>
                         
-                        <!-- Action Buttons: Edit Profile & WhatsApp -->
+                        <!-- Action Buttons: Edit Profile, Reset Password & WhatsApp -->
                         <div class="d-flex gap-1 mt-2 flex-wrap justify-end">
+                            <button th:if="${isSPAdmin or isSHO or u.userId == activeUserId}" 
+                                    th:data-id="${u.userId}"
+                                    th:data-name="${u.name}"
+                                    th:data-phone="${u.phoneNumber}"
+                                    th:data-rank="${u.designation}"
+                                    class="btn btn-outline-info btn-sm py-0 px-2 fw-bold" 
+                                    onclick="openResetPasswordModal(this)" 
+                                    title="Reset Password for this Officer">
+                                <i class="bi bi-key-fill me-1"></i>Reset Password
+                            </button>
                             <button th:if="${isSPAdmin or u.userId == activeUserId}" 
                                     th:data-id="${u.userId}"
                                     th:data-name="${u.name}"
@@ -216,7 +226,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label small text-secondary fw-bold">Login Password</label>
-                            <input type="password" id="editPassword" class="form-control" placeholder="Enter new password (optional)">
+                            <input type="password" id="editPassword" class="form-control" placeholder="Leave empty to keep current password">
                         </div>
                     </div>
                     <div class="modal-footer border-warning">
@@ -227,6 +237,59 @@
                     </div>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal 4: Reset User Password -->
+    <div class="modal fade" id="resetPasswordModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border-info shadow-lg">
+                <form id="resetPasswordForm" onsubmit="event.preventDefault(); executePasswordReset(false); return false;">
+                    <div class="modal-header border-info">
+                        <h5 class="modal-title fw-bold text-white"><i class="bi bi-key-fill me-2 text-info"></i>Reset Account Login Password</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="resetUserId">
+                        <input type="hidden" id="resetUserPhone">
+                        
+                        <div class="card bg-secondary bg-opacity-25 border-info mb-3 p-2 text-white">
+                            <div class="small fw-bold text-cyan"><i class="bi bi-person-badge me-1"></i>Target Account Officer:</div>
+                            <div class="fw-bold fs-6 text-white" id="resetUserNameDisplay">Officer Name</div>
+                            <div class="small text-muted font-monospace" id="resetUserIdDisplay">User ID: usr-001</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary fw-bold">Enter New Login Password</label>
+                            <div class="input-group">
+                                <input type="password" id="resetNewPassword" class="form-control" placeholder="Enter new password" required>
+                                <button type="button" class="btn btn-outline-secondary" onclick="toggleResetPasswordVisibility()" title="Show/Hide Password">
+                                    <i class="bi bi-eye-fill" id="pwdToggleIcon"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-info fw-bold" onclick="generateRandomPassword()" title="Generate Random Password">
+                                    <i class="bi bi-shuffle me-1"></i>Generate
+                                </button>
+                            </div>
+                            <div class="form-text text-muted" style="font-size:0.75rem;">
+                                <i class="bi bi-shield-check me-1 text-success"></i>Password must be at least 3 characters long.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-info d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <div class="d-flex gap-2">
+                            <button type="button" id="resetSubmitBtn" class="btn btn-info btn-sm fw-bold px-3 text-dark" onclick="executePasswordReset(false)">
+                                <i class="bi bi-check-circle-fill me-1"></i>Reset Password
+                            </button>
+                            <button type="button" id="resetWaSubmitBtn" class="btn btn-success btn-sm fw-bold px-3 shadow" onclick="executePasswordReset(true)">
+                                <i class="bi bi-whatsapp me-1"></i>Reset & Send WhatsApp (🟢)
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <input type="hidden" id="activeThanaName" th:value="${activeUser != null ? activeUser.thanaName : 'Buxar Town Thana'}">
 
 <script th:inline="javascript">
@@ -284,7 +347,7 @@ function saveEditedUser() {
       designation: designation,
       phoneNumber: phone,
       badgeNumber: badgeNumber,
-      password: password ? password : 'sp123',
+      password: password ? password : '',
       role: role,
       status: 'Active'
     })
@@ -482,6 +545,109 @@ function deleteUserRecord(btn) {
       btn.innerHTML = '<i class="bi bi-trash-fill me-1"></i>Delete';
     });
   }
+}
+
+function openResetPasswordModal(btn) {
+  const userId = btn.getAttribute('data-id');
+  const name = btn.getAttribute('data-name') || userId;
+  const phone = btn.getAttribute('data-phone') || '';
+  const rank = btn.getAttribute('data-rank') || '';
+
+  document.getElementById('resetUserId').value = userId;
+  document.getElementById('resetUserPhone').value = phone;
+  document.getElementById('resetUserNameDisplay').innerText = name + (rank ? ' (' + rank + ')' : '');
+  document.getElementById('resetUserIdDisplay').innerText = 'Username / ID: ' + userId;
+  document.getElementById('resetNewPassword').value = '';
+  document.getElementById('resetNewPassword').type = 'password';
+  document.getElementById('pwdToggleIcon').className = 'bi bi-eye-fill';
+
+  const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+  modal.show();
+}
+
+function toggleResetPasswordVisibility() {
+  const pwdInput = document.getElementById('resetNewPassword');
+  const icon = document.getElementById('pwdToggleIcon');
+  if (pwdInput.type === 'password') {
+    pwdInput.type = 'text';
+    icon.className = 'bi bi-eye-slash-fill';
+  } else {
+    pwdInput.type = 'password';
+    icon.className = 'bi bi-eye-fill';
+  }
+}
+
+function generateRandomPassword() {
+  const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let pass = '';
+  for (let i = 0; i < 8; i++) {
+    pass += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  const pwdInput = document.getElementById('resetNewPassword');
+  pwdInput.value = pass;
+  pwdInput.type = 'text';
+  document.getElementById('pwdToggleIcon').className = 'bi bi-eye-slash-fill';
+}
+
+function executePasswordReset(isWhatsApp) {
+  const userId = document.getElementById('resetUserId').value;
+  const rawPhone = document.getElementById('resetUserPhone').value;
+  const newPassword = document.getElementById('resetNewPassword').value.trim();
+  const userNameText = document.getElementById('resetUserNameDisplay').innerText;
+  const submitBtn = document.getElementById('resetSubmitBtn');
+  const waBtn = document.getElementById('resetWaSubmitBtn');
+
+  if (!newPassword || newPassword.length < 3) {
+    alert('Please enter a valid new password (at least 3 characters)!');
+    return;
+  }
+
+  if (submitBtn) submitBtn.disabled = true;
+  if (waBtn) waBtn.disabled = true;
+
+  fetch('/api/users/reset-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: userId,
+      newPassword: newPassword
+    })
+  }).then(res => {
+    if (!res.ok) {
+      return res.text().then(text => { throw new Error(text || 'Server error resetting password'); });
+    }
+    return res.json();
+  }).then(data => {
+    alert('🔑 PASSWORD RESET SUCCESSFUL!\n\nUser: ' + userId + '\nNew Password: ' + newPassword);
+
+    if (isWhatsApp && rawPhone) {
+      let cleanPhone = rawPhone.replace(/[^0-9]/g, '');
+      if (!cleanPhone.startsWith('91') && cleanPhone.length === 10) {
+        cleanPhone = '91' + cleanPhone;
+      }
+      const waText = 
+        "🔑 *PATROL TRACKER ACCOUNT PASSWORD RESET*\n" +
+        "-----------------------------------------\n" +
+        "👤 *Officer Name:* " + userNameText + "\n" +
+        "🆔 *User ID / Phone:* " + userId + "\n" +
+        "🔐 *New Password:* " + newPassword + "\n\n" +
+        "🚨 Please use these credentials to log in to Patrol Tracker portal.";
+
+      const waUrl = "https://wa.me/" + cleanPhone + "?text=" + encodeURIComponent(waText);
+      window.open(waUrl, '_blank');
+    }
+
+    const modalEl = document.getElementById('resetPasswordModal');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+    }
+    window.location.reload();
+  }).catch(err => {
+    alert('❌ ERROR RESETTING PASSWORD: ' + err.message);
+    if (submitBtn) submitBtn.disabled = false;
+    if (waBtn) waBtn.disabled = false;
+  });
 }
 </script>
 </div>

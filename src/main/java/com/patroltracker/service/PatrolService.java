@@ -63,23 +63,49 @@ public class PatrolService {
         if (user.getUserId() == null || user.getUserId().isBlank()) {
             user.setUserId("usr-" + UUID.randomUUID().toString().substring(0, 8));
         }
-        if (user.getPassword() == null || user.getPassword().isBlank()) {
-            user.setPassword("guard123");
+        
+        // Preserve existing user fields if updating an existing account and field is blank
+        Optional<User> existingOpt = userRepository.findById(user.getUserId());
+        if (existingOpt.isPresent()) {
+            User existing = existingOpt.get();
+            if (user.getPassword() == null || user.getPassword().isBlank()) {
+                user.setPassword(existing.getPassword());
+            }
+            if (user.getPhoneNumber() == null || user.getPhoneNumber().isBlank()) {
+                user.setPhoneNumber(existing.getPhoneNumber());
+            }
+            if (user.getBadgeNumber() == null || user.getBadgeNumber().isBlank()) {
+                user.setBadgeNumber(existing.getBadgeNumber());
+            }
+            if (user.getRole() == null || user.getRole().isBlank()) {
+                user.setRole(existing.getRole());
+            }
+            if (user.getThanaName() == null || user.getThanaName().isBlank()) {
+                user.setThanaName(existing.getThanaName());
+            }
+            if (user.getDesignation() == null || user.getDesignation().isBlank()) {
+                user.setDesignation(existing.getDesignation());
+            }
+        } else {
+            if (user.getPassword() == null || user.getPassword().isBlank()) {
+                user.setPassword("guard123");
+            }
+            if (user.getPhoneNumber() == null || user.getPhoneNumber().isBlank()) {
+                user.setPhoneNumber("+91-9876543210");
+            }
+            if (user.getBadgeNumber() == null || user.getBadgeNumber().isBlank()) {
+                user.setBadgeNumber("BG-" + (1000 + new Random().nextInt(8999)));
+            }
+            if (user.getRole() == null || user.getRole().isBlank()) {
+                user.setRole("Guard");
+            }
+            if (user.getThanaName() == null || user.getThanaName().isBlank()) {
+                user.setThanaName("Buxar Town Thana");
+            }
         }
-        if (user.getPhoneNumber() == null || user.getPhoneNumber().isBlank()) {
-            user.setPhoneNumber("+91-9876543210");
-        }
-        if (user.getBadgeNumber() == null || user.getBadgeNumber().isBlank()) {
-            user.setBadgeNumber("BG-" + (1000 + new Random().nextInt(8999)));
-        }
-        if (user.getRole() == null || user.getRole().isBlank()) {
-            user.setRole("Guard");
-        }
+        
         if (user.getStatus() == null || user.getStatus().isBlank()) {
             user.setStatus("Active");
-        }
-        if (user.getThanaName() == null || user.getThanaName().isBlank()) {
-            user.setThanaName("Buxar Town Thana");
         }
         User saved = userRepository.save(user);
 
@@ -94,6 +120,21 @@ public class PatrolService {
         System.out.println("=======================================================\n");
 
         return saved;
+    }
+
+    public Optional<User> resetPassword(String userId, String newPassword) {
+        if (userId == null || newPassword == null || newPassword.isBlank()) {
+            return Optional.empty();
+        }
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            user.setPassword(newPassword.trim());
+            User saved = userRepository.save(user);
+            System.out.println(" 🔑 PASSWORD RESET SUCCESSFUL FOR USER: " + userId);
+            return Optional.of(saved);
+        }
+        return Optional.empty();
     }
 
     @Transactional
