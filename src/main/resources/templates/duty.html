@@ -139,10 +139,10 @@
                   <div class="p-3 border border-secondary rounded shadow-sm"
                     style="background-color: #0f172a; max-height: 220px; overflow-y: auto;"
                     id="checkpointNamesContainer">
-                    <div th:each="chk, iterStat : ${checkpoints}" class="form-check mb-2">
+                    <div th:each="chk, iterStat : ${checkpoints}" class="chk-item-wrapper form-check" onclick="toggleChkCard(this, event)">
                       <input class="form-check-input chk-name-input" type="checkbox" th:value="${chk.name}"
-                        th:id="'chkName' + ${iterStat.index}">
-                      <label class="form-check-label text-white small fw-bold" th:for="'chkName' + ${iterStat.index}">
+                        th:id="'chkName' + ${iterStat.index}" onchange="updateChkCardStyle(this)">
+                      <label class="form-check-label text-white small fw-bold mb-0 flex-grow-1" th:for="'chkName' + ${iterStat.index}" style="cursor:pointer;">
                         <span th:text="${chk.name}"></span>
                         <span class="badge bg-info text-dark ms-1" style="font-size: 0.72rem;"
                           th:text="${chk.checkpointId}"></span>
@@ -185,7 +185,10 @@
             if (userSel) userSel.selectedIndex = 0;
             const stationSel = document.getElementById('stationInChargeUser');
             if (stationSel) stationSel.selectedIndex = 0;
-            document.querySelectorAll('.chk-name-input').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.chk-name-input').forEach(cb => {
+              cb.checked = false;
+              if (typeof updateChkCardStyle === 'function') updateChkCardStyle(cb);
+            });
 
             // Set minimum date-time restriction to current time
             const now = new Date();
@@ -377,6 +380,26 @@
 
         const waUrl = "https://wa.me/919876543210?text=" + encodeURIComponent(waText);
         window.open(waUrl, '_blank');
+      }
+
+      function toggleChkCard(wrapper, event) {
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'LABEL') return;
+        const cb = wrapper.querySelector('.chk-name-input');
+        if (cb) {
+          cb.checked = !cb.checked;
+          updateChkCardStyle(cb);
+        }
+      }
+
+      function updateChkCardStyle(cb) {
+        const wrapper = cb.closest('.chk-item-wrapper');
+        if (wrapper) {
+          if (cb.checked) {
+            wrapper.classList.add('active-selected');
+          } else {
+            wrapper.classList.remove('active-selected');
+          }
+        }
       }
     </script>
 </body>
