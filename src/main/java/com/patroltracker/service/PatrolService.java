@@ -14,12 +14,18 @@ import java.util.*;
 @SuppressWarnings("null")
 public class PatrolService {
 
-    @Autowired private UserRepository userRepository;
-    @Autowired private CheckpointRepository checkpointRepository;
-    @Autowired private DutyAllocationRepository dutyAllocationRepository;
-    @Autowired private ScanLogRepository scanLogRepository;
-    @Autowired private ArchiveLogRepository archiveLogRepository;
-    @Autowired private NotificationService notificationService;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private CheckpointRepository checkpointRepository;
+    @Autowired
+    private DutyAllocationRepository dutyAllocationRepository;
+    @Autowired
+    private ScanLogRepository scanLogRepository;
+    @Autowired
+    private ArchiveLogRepository archiveLogRepository;
+    @Autowired
+    private NotificationService notificationService;
 
     public static boolean isStrongPassword(String password) {
         if (password == null || password.trim().length() < 6) {
@@ -41,7 +47,8 @@ public class PatrolService {
     }
 
     public Optional<User> authenticate(String userIdOrIdentifier, String password) {
-        if (userIdOrIdentifier == null || password == null) return Optional.empty();
+        if (userIdOrIdentifier == null || password == null)
+            return Optional.empty();
         String trimmedId = userIdOrIdentifier.trim();
         String cleanDigits = trimmedId.replaceAll("[^0-9]", "");
         String trimmedPassword = password.trim();
@@ -51,19 +58,27 @@ public class PatrolService {
         // 1. Try finding directly by primary key userId
         Optional<User> userOpt = userRepository.findById(trimmedId);
 
-        // 2. If not found by exact primary key, search all users by userId, Name, Badge Number, or Phone Number
+        // 2. If not found by exact primary key, search all users by userId, Name, Badge
+        // Number, or Phone Number
         if (userOpt.isEmpty()) {
             userOpt = userRepository.findAll().stream()
                     .filter(u -> {
-                        if (u.getUserId() != null && trimmedId.equalsIgnoreCase(u.getUserId().trim())) return true;
-                        if (u.getName() != null && trimmedId.equalsIgnoreCase(u.getName().trim())) return true;
-                        if (u.getName() != null && u.getName().toLowerCase().contains(trimmedId.toLowerCase())) return true;
-                        if (u.getBadgeNumber() != null && trimmedId.equalsIgnoreCase(u.getBadgeNumber().trim())) return true;
+                        if (u.getUserId() != null && trimmedId.equalsIgnoreCase(u.getUserId().trim()))
+                            return true;
+                        if (u.getName() != null && trimmedId.equalsIgnoreCase(u.getName().trim()))
+                            return true;
+                        if (u.getName() != null && u.getName().toLowerCase().contains(trimmedId.toLowerCase()))
+                            return true;
+                        if (u.getBadgeNumber() != null && trimmedId.equalsIgnoreCase(u.getBadgeNumber().trim()))
+                            return true;
                         if (u.getPhoneNumber() != null) {
                             String phone = u.getPhoneNumber().trim();
-                            if (trimmedId.equalsIgnoreCase(phone)) return true;
+                            if (trimmedId.equalsIgnoreCase(phone))
+                                return true;
                             String phoneDigits = phone.replaceAll("[^0-9]", "");
-                            if (!cleanDigits.isEmpty() && cleanDigits.length() >= 7 && phoneDigits.endsWith(cleanDigits)) return true;
+                            if (!cleanDigits.isEmpty() && cleanDigits.length() >= 7
+                                    && phoneDigits.endsWith(cleanDigits))
+                                return true;
                         }
                         return false;
                     })
@@ -75,15 +90,16 @@ public class PatrolService {
             User user = userOpt.get();
             String userPwd = user.getPassword() != null ? user.getPassword().trim() : "";
             boolean passwordMatches = trimmedPassword.equals(userPwd) ||
-                                     trimmedPassword.equalsIgnoreCase(userPwd) ||
-                                     "password123".equalsIgnoreCase(trimmedPassword) || 
-                                     "admin123".equalsIgnoreCase(trimmedPassword) || 
-                                     "guard123".equalsIgnoreCase(trimmedPassword) ||
-                                     "super123".equalsIgnoreCase(trimmedPassword) ||
-                                     "BXRadmin123".equalsIgnoreCase(trimmedPassword) ||
-                                     "sp123".equalsIgnoreCase(trimmedPassword);
+                    trimmedPassword.equalsIgnoreCase(userPwd) ||
+                    "password123".equalsIgnoreCase(trimmedPassword) ||
+                    "admin123".equalsIgnoreCase(trimmedPassword) ||
+                    "guard123".equalsIgnoreCase(trimmedPassword) ||
+                    "super123".equalsIgnoreCase(trimmedPassword) ||
+                    "BXRadmin123".equalsIgnoreCase(trimmedPassword) ||
+                    "sp123".equalsIgnoreCase(trimmedPassword);
             if (passwordMatches) {
-                System.out.println(" ✅ AUTHENTICATION SUCCESSFUL FOR USER: " + user.getUserId() + " (" + user.getName() + ")");
+                System.out.println(
+                        " ✅ AUTHENTICATION SUCCESSFUL FOR USER: " + user.getUserId() + " (" + user.getName() + ")");
                 return Optional.of(user);
             } else {
                 System.out.println(" ❌ INCORRECT PASSWORD FOR USER: " + user.getUserId());
@@ -107,8 +123,9 @@ public class PatrolService {
         if (user.getUserId() == null || user.getUserId().isBlank()) {
             user.setUserId("usr-" + UUID.randomUUID().toString().substring(0, 8));
         }
-        
-        // Preserve existing user fields if updating an existing account and field is blank
+
+        // Preserve existing user fields if updating an existing account and field is
+        // blank
         Optional<User> existingOpt = userRepository.findById(user.getUserId());
         if (existingOpt.isPresent()) {
             User existing = existingOpt.get();
@@ -147,7 +164,7 @@ public class PatrolService {
                 user.setThanaName("Buxar Town Thana");
             }
         }
-        
+
         if (user.getStatus() == null || user.getStatus().isBlank()) {
             user.setStatus("Active");
         }
@@ -190,12 +207,12 @@ public class PatrolService {
             User user = userOpt.get();
             String currentPassword = user.getPassword();
             // Validate old password against existing password or default override keys
-            boolean matches = oldPassword.equals(currentPassword) || 
-                              "password123".equals(oldPassword) || 
-                              "admin123".equals(oldPassword) || 
-                              "guard123".equals(oldPassword) ||
-                              "sp123".equals(oldPassword) ||
-                              "super123".equals(oldPassword);
+            boolean matches = oldPassword.equals(currentPassword) ||
+                    "password123".equals(oldPassword) ||
+                    "admin123".equals(oldPassword) ||
+                    "guard123".equals(oldPassword) ||
+                    "sp123".equals(oldPassword) ||
+                    "super123".equals(oldPassword);
             if (matches) {
                 user.setPassword(newPassword.trim());
                 User saved = userRepository.save(user);
@@ -282,8 +299,10 @@ public class PatrolService {
 
         // Dispatch Mobile SMS & WhatsApp Notifications to Police Staff / Guard
         userRepository.findById(savedDuty.getUserId()).ifPresent(staff -> {
-            User stationInCharge = userRepository.findById(savedDuty.getStationInChargeId() != null ? savedDuty.getStationInChargeId() : "usr-003")
-                    .orElseGet(() -> new User("usr-003", "Station In-Charge", "Supervisor", "BG-0001", "Station In-Charge (SHO)", "Active"));
+            User stationInCharge = userRepository
+                    .findById(savedDuty.getStationInChargeId() != null ? savedDuty.getStationInChargeId() : "usr-003")
+                    .orElseGet(() -> new User("usr-003", "Station In-Charge", "Supervisor", "BG-0001",
+                            "Station In-Charge (SHO)", "Active"));
             notificationService.sendDutyAssignmentSms(savedDuty, staff, stationInCharge);
             notificationService.sendWhatsAppDutyMessage(savedDuty, staff, stationInCharge);
         });
@@ -297,7 +316,8 @@ public class PatrolService {
     }
 
     @Transactional
-    public Map<String, Object> registerScan(String qrCodeData, String userId, String dutyId, BigDecimal lat, BigDecimal lng, String notes) {
+    public Map<String, Object> registerScan(String qrCodeData, String userId, String dutyId, BigDecimal lat,
+            BigDecimal lng, String notes) {
         Map<String, Object> response = new HashMap<>();
 
         Optional<Checkpoint> checkpointOpt = checkpointRepository.findByQrCodeData(qrCodeData);
@@ -313,10 +333,11 @@ public class PatrolService {
         }
 
         Checkpoint checkpoint = checkpointOpt.get();
-        
+
         // Determine status (On-Time, Late, Incident)
         String status = "On-Time";
-        if (notes != null && (notes.toLowerCase().contains("damage") || notes.toLowerCase().contains("broken") || notes.toLowerCase().contains("issue") || notes.toLowerCase().contains("incident"))) {
+        if (notes != null && (notes.toLowerCase().contains("damage") || notes.toLowerCase().contains("broken")
+                || notes.toLowerCase().contains("issue") || notes.toLowerCase().contains("incident"))) {
             status = "Incident";
         }
 
@@ -351,7 +372,8 @@ public class PatrolService {
         scanLogRepository.save(log);
 
         // Trigger Live Scan Mobile SMS & Map Visibility alert
-        Map<String, String> smsLog = notificationService.sendLiveScanGpsSms(guard, checkpoint, log.getLatitude(), log.getLongitude());
+        Map<String, String> smsLog = notificationService.sendLiveScanGpsSms(guard, checkpoint, log.getLatitude(),
+                log.getLongitude());
 
         response.put("success", true);
         response.put("message", "Checkpoint scanned successfully: " + checkpoint.getName());
@@ -390,14 +412,16 @@ public class PatrolService {
     }
 
     public boolean isSuperintendentOfPolice(String userId) {
-        if (userId == null) return false;
+        if (userId == null)
+            return false;
         return userRepository.findById(userId)
                 .map(User::isSuperintendentOfPolice)
                 .orElse(false);
     }
 
     public boolean isStationHouseOfficer(String userId) {
-        if (userId == null) return false;
+        if (userId == null)
+            return false;
         return userRepository.findById(userId)
                 .map(User::isStationHouseOfficer)
                 .orElse(false);
@@ -434,7 +458,8 @@ public class PatrolService {
         if (currentUser.isStationHouseOfficer()) {
             List<String> thanaUserIds = getUsersForUser(userId).stream().map(User::getUserId).toList();
             return dutyAllocationRepository.findAll().stream()
-                    .filter(d -> (d.getStationInChargeId() != null && d.getStationInChargeId().equalsIgnoreCase(userId)) || thanaUserIds.contains(d.getUserId()))
+                    .filter(d -> (d.getStationInChargeId() != null && d.getStationInChargeId().equalsIgnoreCase(userId))
+                            || thanaUserIds.contains(d.getUserId()))
                     .toList();
         }
         // Guard / Staff: Only sees duties assigned to self
@@ -457,7 +482,9 @@ public class PatrolService {
             }
             final String targetThana = thana;
             return userRepository.findAll().stream()
-                    .filter(u -> u.getThanaName() == null || u.getThanaName().isBlank() || targetThana.equalsIgnoreCase(u.getThanaName().trim()) || u.getUserId().equalsIgnoreCase(userId))
+                    .filter(u -> u.getThanaName() == null || u.getThanaName().isBlank()
+                            || targetThana.equalsIgnoreCase(u.getThanaName().trim())
+                            || u.getUserId().equalsIgnoreCase(userId))
                     .toList();
         }
         // Police Staff / Guard: Only sees self profile
@@ -496,7 +523,8 @@ public class PatrolService {
         stats.put("incidentScans", incidentScans);
         stats.put("complianceRate", complianceRate);
         stats.put("totalCheckpoints", allCheckpoints.size());
-        stats.put("activeDuties", userDuties.stream().filter(d -> "In Progress".equalsIgnoreCase(d.getStatus())).count());
+        stats.put("activeDuties",
+                userDuties.stream().filter(d -> "In Progress".equalsIgnoreCase(d.getStatus())).count());
         stats.put("isPersonalView", true);
 
         return stats;
@@ -520,7 +548,8 @@ public class PatrolService {
         stats.put("incidentScans", incidentScans);
         stats.put("complianceRate", complianceRate);
         stats.put("totalCheckpoints", allCheckpoints.size());
-        stats.put("activeDuties", allDuties.stream().filter(d -> "In Progress".equalsIgnoreCase(d.getStatus())).count());
+        stats.put("activeDuties",
+                allDuties.stream().filter(d -> "In Progress".equalsIgnoreCase(d.getStatus())).count());
         stats.put("isPersonalView", false);
 
         return stats;

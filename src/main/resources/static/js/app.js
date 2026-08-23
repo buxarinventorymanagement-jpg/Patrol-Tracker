@@ -7,6 +7,8 @@ let html5QrCodeScanner = null;
 let patrolMap = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+
   const savedViewMode = localStorage.getItem('patrol_view_mode') || 'frame';
   if (savedViewMode === 'full') {
     document.getElementById('appViewport')?.classList.add('full-width');
@@ -33,6 +35,40 @@ document.addEventListener('DOMContentLoaded', () => {
     initPageScanLogForm();
   }
 });
+
+function initTheme() {
+  const savedTheme = localStorage.getItem('patrol_theme') || 'dark';
+  applyTheme(savedTheme);
+}
+
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.body.classList.add('theme-light');
+  } else {
+    document.body.classList.remove('theme-light');
+  }
+  updateThemeToggleUI(theme);
+}
+
+function toggleTheme() {
+  const isLight = document.body.classList.contains('theme-light');
+  const newTheme = isLight ? 'dark' : 'light';
+  localStorage.setItem('patrol_theme', newTheme);
+  applyTheme(newTheme);
+}
+
+function updateThemeToggleUI(theme) {
+  const btns = document.querySelectorAll('.btn-theme-toggle, #themeToggleBtn');
+  btns.forEach(btn => {
+    if (theme === 'light') {
+      btn.innerHTML = '<i class="bi bi-moon-stars-fill me-1 text-primary"></i><span>Dark Mode</span>';
+      btn.setAttribute('title', 'Switch to Dark Mode');
+    } else {
+      btn.innerHTML = '<i class="bi bi-sun-fill me-1 text-warning"></i><span>Light Mode</span>';
+      btn.setAttribute('title', 'Switch to Light Mode');
+    }
+  });
+}
 
 function toggleViewMode() {
   const viewport = document.getElementById('appViewport');

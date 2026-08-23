@@ -13,10 +13,30 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
     <link rel="stylesheet" th:href="@{/css/style.css(v=${#dates.createNow().getTime()})}"/>
+    <script>
+      (function() {
+        const theme = localStorage.getItem('patrol_theme') || 'dark';
+        if (theme === 'light') {
+          document.documentElement.classList.add('theme-light');
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('theme-light'));
+        }
+      })();
+    </script>
 </head>
 <body>
 
-    <div class="app-viewport">
+    <div class="app-viewport" id="appViewport">
+        <!-- Top Center Bihar Police Branding Header Banner -->
+        <div class="header-top-banner">
+            <div class="header-center-brand">
+                <img th:src="@{/images/bihar-police-logo.svg}" alt="Bihar Police Logo" class="police-logo-img">
+                <div class="header-district-title">
+                    <span>BUXAR POLICE, BIHAR</span>
+                    <small>बिहार पुलिस — बक्सर, बिहार | PATROL TRACKER PORTAL</small>
+                </div>
+            </div>
+        </div>
+
         <!-- Role Banner -->
         <div th:if="${isSPAdmin}" class="bg-danger text-white text-center py-1 px-3 small fw-bold">
             <i class="bi bi-shield-lock-fill me-1"></i>🚔 SUPERINTENDENT OF POLICE (SP) ADMIN MODE — District Command & SHO Management
@@ -34,7 +54,7 @@
                 <div class="brand-icon">
                     <i class="bi bi-shield-check"></i>
                 </div>
-                <span>PATROL TRACKER PORTAL</span>
+                <span>PATROL TRACKER</span>
             </a>
 
             <!-- Header Website Links -->
@@ -65,8 +85,14 @@
                 </a>
             </nav>
 
-            <!-- User Profile & Sign Out Button -->
+            <!-- User Profile & Controls -->
             <div class="user-controls d-flex align-items-center gap-2">
+                <!-- Light / Dark Mode Background Switcher Button -->
+                <button type="button" class="btn-theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Switch Light / Dark Mode Theme">
+                    <i class="bi bi-sun-fill me-1 text-warning"></i>
+                    <span>Light Mode</span>
+                </button>
+
                 <div class="user-selector d-none d-sm-block">
                     <select id="activeUserSelect" class="form-select form-select-sm" title="Active Guard Profile">
                         <option th:each="u : ${allUsers}" 
