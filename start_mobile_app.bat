@@ -2,7 +2,7 @@
 title Patrol Tracker - Mobile & PC Launcher
 cls
 echo ========================================================
-echo         PATROL TRACKER - MOBILE & PC LAUNCHER
+echo         PATROL TRACKER - MOBILE ^& PC LAUNCHER
 echo ========================================================
 echo.
 echo Starting Spring Boot Server and Cloudflare Mobile Tunnel...
@@ -20,7 +20,7 @@ start "Patrol Tracker Mobile Tunnel" cmd /k "npx --yes cloudflared tunnel --prot
 echo [2/2] Mobile Tunnel launched!
 echo.
 echo ========================================================
-echo  ACCESS LINKS & LOGIN DETAILS:
+echo  ACCESS LINKS ^& LOGIN DETAILS:
 echo ========================================================
 echo  1. Computer / Laptop Link:  http://localhost:8080
 echo  2. Mobile Link (4G/5G/WiFi): Look at the 'Mobile Tunnel' window

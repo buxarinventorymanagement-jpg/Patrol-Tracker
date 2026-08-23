@@ -29,10 +29,10 @@
         <!-- Login Form -->
         <form th:action="@{/login}" method="post">
             <div class="mb-3">
-                <label class="form-label small text-muted">User ID / Badge Number</label>
+                <label class="form-label small text-muted">User ID / Name / Mobile / Badge</label>
                 <div class="input-group">
                     <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-person"></i></span>
-                    <input type="text" id="loginUserId" name="userId" class="form-control" placeholder="e.g. Patrol Tracker or usr-001" required value="Patrol Tracker">
+                    <input type="text" id="loginUserId" name="userId" class="form-control" placeholder="Enter User ID, Name, or Badge..." required>
                 </div>
             </div>
 
@@ -40,7 +40,7 @@
                 <label class="form-label small text-muted">Password</label>
                 <div class="input-group">
                     <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-key"></i></span>
-                    <input type="password" id="loginPassword" name="password" class="form-control" placeholder="Enter password..." required value="BXRadmin123">
+                    <input type="password" id="loginPassword" name="password" class="form-control" placeholder="Enter password..." required>
                 </div>
             </div>
 
@@ -70,6 +70,8 @@
 function setLogin(id, pwd) {
   document.getElementById('loginUserId').value = id;
   document.getElementById('loginPassword').value = pwd;
+  const form = document.querySelector('form');
+  if (form) form.submit();
 }
 </script>
 </body>

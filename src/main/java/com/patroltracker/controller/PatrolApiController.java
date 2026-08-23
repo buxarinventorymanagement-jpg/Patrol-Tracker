@@ -115,7 +115,15 @@ public class PatrolApiController {
 
     // Create user
     @PostMapping("/users")
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public ResponseEntity<?> createUser(@RequestBody User user) {
+        if (user.getPassword() != null && !user.getPassword().isBlank()) {
+            if (!PatrolService.isStrongPassword(user.getPassword())) {
+                return ResponseEntity.status(400).body(Map.of(
+                    "success", false,
+                    "message", "Strong Password Required! Must start with an UPPERCASE letter (A-Z) and contain a mixture of lowercase letters, digits (0-9), and special characters (e.g. Admin@123)."
+                ));
+            }
+        }
         return ResponseEntity.ok(patrolService.saveUser(user));
     }
 
@@ -124,6 +132,13 @@ public class PatrolApiController {
     public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody Map<String, String> body) {
         String userId = body.get("userId");
         String newPassword = body.get("newPassword");
+
+        if (newPassword == null || !PatrolService.isStrongPassword(newPassword)) {
+            return ResponseEntity.status(400).body(Map.of(
+                "success", false,
+                "message", "Strong Password Required! Must start with an UPPERCASE letter (A-Z) and contain a mixture of lowercase letters, digits (0-9), and special characters (e.g. Admin@123)."
+            ));
+        }
 
         Optional<User> updatedUser = patrolService.resetPassword(userId, newPassword);
         if (updatedUser.isPresent()) {
@@ -136,6 +151,49 @@ public class PatrolApiController {
             return ResponseEntity.status(400).body(Map.of(
                 "success", false,
                 "message", "Failed to reset password. User not found or invalid password."
+            ));
+        }
+    }
+
+    // Change User Password (Self-Service with Old Password Validation)
+    @PostMapping("/users/change-password")
+    public ResponseEntity<Map<String, Object>> changePassword(@RequestBody Map<String, String> body) {
+        String userId = body.get("userId");
+        String oldPassword = body.get("oldPassword");
+        String newPassword = body.get("newPassword");
+
+        if (userId == null || userId.isBlank()) {
+            return ResponseEntity.status(400).body(Map.of(
+                "success", false,
+                "message", "User ID is required."
+            ));
+        }
+
+        if (oldPassword == null || oldPassword.isBlank()) {
+            return ResponseEntity.status(400).body(Map.of(
+                "success", false,
+                "message", "Current password is required."
+            ));
+        }
+
+        if (newPassword == null || !PatrolService.isStrongPassword(newPassword)) {
+            return ResponseEntity.status(400).body(Map.of(
+                "success", false,
+                "message", "Strong Password Required! Must start with an UPPERCASE letter (A-Z) and contain a mixture of lowercase letters, digits (0-9), and special characters (e.g. Admin@123)."
+            ));
+        }
+
+        Optional<User> updatedUser = patrolService.changePassword(userId, oldPassword, newPassword);
+        if (updatedUser.isPresent()) {
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Password changed successfully!",
+                "userId", userId
+            ));
+        } else {
+            return ResponseEntity.status(400).body(Map.of(
+                "success", false,
+                "message", "Failed to change password. Incorrect current password or user not found."
             ));
         }
     }

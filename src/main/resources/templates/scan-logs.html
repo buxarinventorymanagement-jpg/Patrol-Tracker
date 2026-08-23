@@ -179,33 +179,33 @@
                 </div>
 
                 <div class="scan-feed" style="max-height: 520px; overflow-y: auto;">
-                    <div th:each="log : ${scanLogs}" class="log-card p-3 mb-2 rounded bg-dark-subtle border border-secondary">
-                        <div class="d-flex justify-content-between align-items-start">
+                    <div th:each="log : ${scanLogs}" class="log-card p-3 mb-2 rounded border border-secondary">
+                        <div class="d-flex justify-content-between align-items-start w-100">
                             <div>
                                 <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                                    <strong class="fs-6 text-light" th:text="${log.checkpointId != null ? log.checkpointId : log.scanId}">chk-101</strong>
+                                    <strong class="fs-6 text-white fw-bold" th:text="${log.checkpointId != null ? log.checkpointId : log.scanId}">chk-101</strong>
                                     <span th:if="${log.status == 'On-Time' or log.status == 'Duty Verified'}" class="badge-on-time" th:text="${log.status}">Duty Verified</span>
                                     <span th:if="${log.status == 'Incident'}" class="badge-incident">Incident</span>
                                     <span th:if="${log.status == 'Out of Range' or log.status == 'Late'}" class="badge-late" th:text="${log.status}">Out of Range</span>
                                     <span th:if="${log.thanaName != null and !log.thanaName.isEmpty()}" class="badge bg-secondary text-light small" th:text="${log.thanaName}">Buxar Town Thana</span>
                                 </div>
-                                <div class="text-muted small mb-1">
-                                    <i class="bi bi-person me-1 text-info"></i><span th:text="${log.userId}">usr-001</span>
-                                    <span class="mx-1">•</span>
-                                    <i class="bi bi-qr-code me-1 text-warning"></i><span th:text="${log.qrId != null ? log.qrId : 'QR-CODE'}">QR-CODE</span>
+                                <div class="small mb-1 text-light">
+                                    <i class="bi bi-person me-1 text-info fw-bold"></i><span class="text-cyan font-monospace" th:text="${log.userId}">usr-001</span>
+                                    <span class="mx-1 text-secondary">•</span>
+                                    <i class="bi bi-qr-code me-1 text-warning"></i><span class="text-light" th:text="${log.qrId != null ? log.qrId : 'QR-CODE'}">QR-CODE</span>
                                 </div>
-                                <div class="text-muted small">
-                                    <i class="bi bi-geo-alt me-1 text-danger"></i><span th:text="${log.latitude} + ', ' + ${log.longitude}">25.565807, 83.983709</span>
+                                <div class="small text-secondary">
+                                    <i class="bi bi-geo-alt me-1 text-danger"></i><span class="font-monospace text-light" th:text="${log.latitude} + ', ' + ${log.longitude}">25.565807, 83.983709</span>
                                 </div>
-                                <div th:if="${log.patrolStatus != null and !log.patrolStatus.isEmpty()}" class="small text-warning mt-1">
+                                <div th:if="${log.patrolStatus != null and !log.patrolStatus.isEmpty()}" class="small text-warning mt-1 fw-medium">
                                     <i class="bi bi-shield-check me-1"></i>Patrol Status: <span th:text="${log.patrolStatus}">In Range</span>
                                 </div>
-                                <div th:if="${log.notes != null and !log.notes.isEmpty()}" class="small text-info mt-1">
+                                <div th:if="${log.notes != null and !log.notes.isEmpty()}" class="small text-info mt-1 fw-medium">
                                     <i class="bi bi-chat-left-text me-1"></i><span th:text="${log.notes}">Notes</span>
                                 </div>
                             </div>
-                            <div class="text-end">
-                                <span class="text-secondary small font-monospace d-block mb-2" th:text="${#temporals.format(log.scanTime, 'yyyy-MM-dd HH:mm:ss')}">14:32:00</span>
+                            <div class="text-end ms-2">
+                                <span class="text-light opacity-75 small font-monospace d-block mb-2" th:text="${#temporals.format(log.scanTime, 'yyyy-MM-dd HH:mm:ss')}">14:32:00</span>
                                 <div th:if="${log.photoProof != null and !log.photoProof.isEmpty()}">
                                     <img th:src="${log.photoProof}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #06b6d4;" alt="Proof Photo">
                                 </div>

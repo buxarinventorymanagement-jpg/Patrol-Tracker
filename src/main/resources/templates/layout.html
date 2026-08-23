@@ -92,6 +92,16 @@
                     <span class="d-none d-lg-inline">Edit Name</span>
                 </button>
 
+                <!-- Change Password Button (For all Logged-in Users & Admins) -->
+                <button type="button" class="btn btn-outline-info btn-sm fw-bold d-flex align-items-center gap-1 shadow-sm"
+                        th:data-id="${activeUser.userId}"
+                        th:data-name="${activeUser.name}"
+                        onclick="openChangePasswordModal(this)"
+                        title="Change Password">
+                    <i class="bi bi-key-fill"></i>
+                    <span class="d-none d-lg-inline">Change Password</span>
+                </button>
+
                 <a th:href="@{/logout}" class="btn btn-outline-danger btn-sm rounded-pill px-3" title="Sign Out of Patrol Tracker">
                     <i class="bi bi-box-arrow-right me-1"></i>Sign Out
                 </a>
@@ -160,6 +170,48 @@
         </div>
     </div>
 
+    <!-- Modal: Change Password (Header Access for all users) -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border-info">
+                <form id="changePasswordForm" onsubmit="event.preventDefault(); saveChangePassword(); return false;">
+                    <div class="modal-header border-info">
+                        <h5 class="modal-title fw-bold text-white"><i class="bi bi-key-fill me-2 text-info"></i>Change Password</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="pwdUserId">
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary fw-bold">User Account</label>
+                            <input type="text" id="pwdUserName" class="form-control" readonly disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary fw-bold"><i class="bi bi-lock me-1"></i>Current Password<span class="text-danger">*</span></label>
+                            <input type="password" id="pwdOldPassword" class="form-control" placeholder="Enter current password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary fw-bold"><i class="bi bi-key me-1 text-info"></i>New Password<span class="text-danger">*</span></label>
+                            <input type="password" id="pwdNewPassword" class="form-control" placeholder="e.g. Admin@123 (Starts with UPPERCASE)" required minlength="6">
+                            <div class="form-text text-info" style="font-size:0.73rem;">
+                                <i class="bi bi-info-circle me-1"></i>Must start with UPPERCASE (A-Z) &amp; include a-z, 0-9, and special chars (e.g. <code>Admin@123</code>).
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary fw-bold"><i class="bi bi-check-circle me-1 text-success"></i>Confirm New Password<span class="text-danger">*</span></label>
+                            <input type="password" id="pwdConfirmPassword" class="form-control" placeholder="Re-enter new password" required minlength="6">
+                        </div>
+                    </div>
+                    <div class="modal-footer border-info">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="pwdSubmitBtn" class="btn btn-info btn-sm fw-bold px-3 shadow text-dark">
+                            <i class="bi bi-check-lg me-1"></i>Update Password
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- JS Bundles -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -216,6 +268,81 @@
         location.reload();
       }).catch(err => {
         alert('Error updating profile: ' + err);
+      });
+    }
+
+    function isStrongPasswordJS(pwd) {
+      if (!pwd || pwd.trim().length < 6) return false;
+      const p = pwd.trim();
+      const startsWithUpper = /^[A-Z]/.test(p);
+      const hasLower = /[a-z]/.test(p);
+      const hasDigit = /[0-9]/.test(p);
+      const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p);
+      return startsWithUpper && hasLower && hasDigit && hasSpecial;
+    }
+
+    function openChangePasswordModal(btn) {
+      const userId = btn.getAttribute('data-id');
+      const userName = btn.getAttribute('data-name');
+      document.getElementById('pwdUserId').value = userId;
+      document.getElementById('pwdUserName').value = userName + ' (' + userId + ')';
+      document.getElementById('pwdOldPassword').value = '';
+      document.getElementById('pwdNewPassword').value = '';
+      document.getElementById('pwdConfirmPassword').value = '';
+
+      const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+      modal.show();
+    }
+
+    function saveChangePassword() {
+      const userId = document.getElementById('pwdUserId').value;
+      const oldPassword = document.getElementById('pwdOldPassword').value.trim();
+      const newPassword = document.getElementById('pwdNewPassword').value.trim();
+      const confirmPassword = document.getElementById('pwdConfirmPassword').value.trim();
+
+      if (!oldPassword) {
+        alert('Please enter your current password!');
+        return;
+      }
+
+      if (!isStrongPasswordJS(newPassword)) {
+        alert('❌ STRONG PASSWORD REQUIRED!\n----------------------------------------\n1. Must start with an UPPERCASE letter (A-Z)\n2. Must contain lowercase letters (a-z)\n3. Must contain digits (0-9)\n4. Must contain special characters (e.g. @, #, $, !)\n5. Minimum 6 characters long\n\nExample valid password: Admin@123');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        alert('New Password and Confirm Password do not match!');
+        return;
+      }
+
+      const submitBtn = document.getElementById('pwdSubmitBtn');
+      if (submitBtn) submitBtn.disabled = true;
+
+      fetch('/api/users/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userId,
+          oldPassword: oldPassword,
+          newPassword: newPassword
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert('🔑 PASSWORD CHANGED SUCCESSFULLY!\nPlease use your new password for your next login.');
+          const modalEl = document.getElementById('changePasswordModal');
+          const modal = bootstrap.Modal.getInstance(modalEl);
+          if (modal) modal.hide();
+        } else {
+          alert('⚠️ ' + (data.message || 'Failed to change password.'));
+        }
+      })
+      .catch(err => {
+        alert('Error changing password: ' + err);
+      })
+      .finally(() => {
+        if (submitBtn) submitBtn.disabled = false;
       });
     }
     </script>

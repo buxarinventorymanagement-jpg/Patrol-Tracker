@@ -124,8 +124,11 @@
                             <input type="text" id="shoUserId" class="form-control" placeholder="e.g. sho_rajesh" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small text-secondary fw-bold">Login Password</label>
-                            <input type="password" id="shoPassword" class="form-control" placeholder="Enter login password" required>
+                            <label class="form-label small text-secondary fw-bold">Login Password<span class="text-danger">*</span></label>
+                            <input type="password" id="shoPassword" class="form-control" placeholder="e.g. Admin@123 (Starts with UPPERCASE)" required minlength="6">
+                            <div class="form-text text-info" style="font-size:0.73rem;">
+                                <i class="bi bi-info-circle me-1"></i>Must start with UPPERCASE (A-Z) &amp; include a-z, 0-9, and special chars (e.g. <code>Admin@123</code>).
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer border-danger">
@@ -181,8 +184,11 @@
                             <input type="text" id="newUserId" class="form-control" placeholder="e.g. pc_ramesh" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small text-secondary fw-bold">Login Password</label>
-                            <input type="password" id="userPassword" class="form-control" placeholder="Enter login password" required>
+                            <label class="form-label small text-secondary fw-bold">Login Password<span class="text-danger">*</span></label>
+                            <input type="password" id="userPassword" class="form-control" placeholder="e.g. Guard#2026 (Starts with UPPERCASE)" required minlength="6">
+                            <div class="form-text text-info" style="font-size:0.73rem;">
+                                <i class="bi bi-info-circle me-1"></i>Must start with UPPERCASE (A-Z) &amp; include a-z, 0-9, and special chars (e.g. <code>Guard#2026</code>).
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer border-secondary">
@@ -226,7 +232,10 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label small text-secondary fw-bold">Login Password</label>
-                            <input type="password" id="editPassword" class="form-control" placeholder="Leave empty to keep current password">
+                            <input type="password" id="editPassword" class="form-control" placeholder="Leave empty to keep current password (e.g. Admin@123)">
+                            <div class="form-text text-info" style="font-size:0.73rem;">
+                                <i class="bi bi-info-circle me-1"></i>Must start with UPPERCASE (A-Z) &amp; include a-z, 0-9, and special chars if changing.
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer border-warning">
@@ -262,7 +271,7 @@
                         <div class="mb-3">
                             <label class="form-label small text-secondary fw-bold">Enter New Login Password</label>
                             <div class="input-group">
-                                <input type="password" id="resetNewPassword" class="form-control" placeholder="Enter new password" required>
+                                <input type="password" id="resetNewPassword" class="form-control" placeholder="e.g. Guard#2026 (Starts with UPPERCASE)" required minlength="6">
                                 <button type="button" class="btn btn-outline-secondary" onclick="toggleResetPasswordVisibility()" title="Show/Hide Password">
                                     <i class="bi bi-eye-fill" id="pwdToggleIcon"></i>
                                 </button>
@@ -270,8 +279,8 @@
                                     <i class="bi bi-shuffle me-1"></i>Generate
                                 </button>
                             </div>
-                            <div class="form-text text-muted" style="font-size:0.75rem;">
-                                <i class="bi bi-shield-check me-1 text-success"></i>Password must be at least 3 characters long.
+                            <div class="form-text text-info" style="font-size:0.73rem;">
+                                <i class="bi bi-shield-check me-1 text-success"></i>Must start with UPPERCASE (A-Z) &amp; include a-z, 0-9, and special chars (e.g. <code>Guard#2026</code>).
                             </div>
                         </div>
                     </div>
@@ -330,6 +339,11 @@ function saveEditedUser() {
 
   if (!name || !phone) {
     alert('Please enter a valid Name and Mobile Number!');
+    return;
+  }
+
+  if (password && typeof isStrongPasswordJS === 'function' && !isStrongPasswordJS(password)) {
+    alert('❌ STRONG PASSWORD REQUIRED!\n----------------------------------------\n1. Must start with an UPPERCASE letter (A-Z)\n2. Must contain lowercase letters (a-z)\n3. Must contain digits (0-9)\n4. Must contain special characters (e.g. @, #, $, !)\n5. Minimum 6 characters long\n\nExample valid password: Admin@123');
     return;
   }
 
@@ -392,7 +406,13 @@ function saveShoUser() {
   const badgeVal = document.getElementById('shoBadge') ? document.getElementById('shoBadge').value.trim() : '';
   const badgeNumber = badgeVal ? badgeVal : ('SHO-BXR-' + Math.floor(Math.random()*8999+1000));
   const passwordVal = document.getElementById('shoPassword') ? document.getElementById('shoPassword').value : '';
-  const password = passwordVal ? passwordVal : 'super123';
+  const password = passwordVal ? passwordVal : 'Super#123';
+
+  if (typeof isStrongPasswordJS === 'function' && !isStrongPasswordJS(password)) {
+    alert('❌ STRONG PASSWORD REQUIRED!\n----------------------------------------\n1. Must start with an UPPERCASE letter (A-Z)\n2. Must contain lowercase letters (a-z)\n3. Must contain digits (0-9)\n4. Must contain special characters (e.g. @, #, $, !)\n5. Minimum 6 characters long\n\nExample valid password: Super#123');
+    return;
+  }
+
   const submitBtn = document.getElementById('shoSubmitBtn');
 
   if (submitBtn) {
@@ -454,8 +474,12 @@ function saveStaffUser() {
   const badgeVal = document.getElementById('userBadge') ? document.getElementById('userBadge').value.trim() : '';
   const badgeNumber = badgeVal ? badgeVal : ('PC-BXR-' + Math.floor(Math.random()*8999+1000));
   const passwordVal = document.getElementById('userPassword') ? document.getElementById('userPassword').value : '';
-  const password = passwordVal ? passwordVal : 'guard123';
-  const submitBtn = document.getElementById('staffSubmitBtn');
+  const password = passwordVal ? passwordVal : 'Guard#2026';
+
+  if (typeof isStrongPasswordJS === 'function' && !isStrongPasswordJS(password)) {
+    alert('❌ STRONG PASSWORD REQUIRED!\n----------------------------------------\n1. Must start with an UPPERCASE letter (A-Z)\n2. Must contain lowercase letters (a-z)\n3. Must contain digits (0-9)\n4. Must contain special characters (e.g. @, #, $, !)\n5. Minimum 6 characters long\n\nExample valid password: Guard#2026');
+    return;
+  }
 
   if (submitBtn) {
     submitBtn.disabled = true;
@@ -578,11 +602,20 @@ function toggleResetPasswordVisibility() {
 }
 
 function generateRandomPassword() {
-  const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  let pass = '';
-  for (let i = 0; i < 8; i++) {
-    pass += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
+  const uppers = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lowers = 'abcdefghjkmnpqrstuvwxyz';
+  const digits = '23456789';
+  const specials = '@#$%&*!';
+
+  const first = uppers.charAt(Math.floor(Math.random() * uppers.length));
+  const l1 = lowers.charAt(Math.floor(Math.random() * lowers.length));
+  const l2 = lowers.charAt(Math.floor(Math.random() * lowers.length));
+  const l3 = lowers.charAt(Math.floor(Math.random() * lowers.length));
+  const spec = specials.charAt(Math.floor(Math.random() * specials.length));
+  const d1 = digits.charAt(Math.floor(Math.random() * digits.length));
+  const d2 = digits.charAt(Math.floor(Math.random() * digits.length));
+
+  const pass = first + l1 + l2 + l3 + spec + d1 + d2;
   const pwdInput = document.getElementById('resetNewPassword');
   pwdInput.value = pass;
   pwdInput.type = 'text';
@@ -597,8 +630,8 @@ function executePasswordReset(isWhatsApp) {
   const submitBtn = document.getElementById('resetSubmitBtn');
   const waBtn = document.getElementById('resetWaSubmitBtn');
 
-  if (!newPassword || newPassword.length < 3) {
-    alert('Please enter a valid new password (at least 3 characters)!');
+  if (typeof isStrongPasswordJS === 'function' && !isStrongPasswordJS(newPassword)) {
+    alert('❌ STRONG PASSWORD REQUIRED!\n----------------------------------------\n1. Must start with an UPPERCASE letter (A-Z)\n2. Must contain lowercase letters (a-z)\n3. Must contain digits (0-9)\n4. Must contain special characters (e.g. @, #, $, !)\n5. Minimum 6 characters long\n\nExample valid password: Guard#2026');
     return;
   }
 

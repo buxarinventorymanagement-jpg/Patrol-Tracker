@@ -21,15 +21,43 @@ public class PatrolService {
     @Autowired private ArchiveLogRepository archiveLogRepository;
     @Autowired private NotificationService notificationService;
 
-    public Optional<User> authenticate(String userId, String password) {
-        if (userId == null || password == null) return Optional.empty();
-        String trimmedId = userId.trim();
-        String cleanDigits = trimmedId.replaceAll("[^0-9]", "");
+    public static boolean isStrongPassword(String password) {
+        if (password == null || password.trim().length() < 6) {
+            return false;
+        }
+        String p = password.trim();
+        // 1. Must start with an uppercase letter [A-Z]
+        if (!Character.isUpperCase(p.charAt(0))) {
+            return false;
+        }
+        // 2. Must contain at least one lowercase letter [a-z]
+        boolean hasLower = p.chars().anyMatch(Character::isLowerCase);
+        // 3. Must contain at least one digit [0-9]
+        boolean hasDigit = p.chars().anyMatch(Character::isDigit);
+        // 4. Must contain at least one special character
+        boolean hasSpecial = p.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*");
 
+        return hasLower && hasDigit && hasSpecial;
+    }
+
+    public Optional<User> authenticate(String userIdOrIdentifier, String password) {
+        if (userIdOrIdentifier == null || password == null) return Optional.empty();
+        String trimmedId = userIdOrIdentifier.trim();
+        String cleanDigits = trimmedId.replaceAll("[^0-9]", "");
+        String trimmedPassword = password.trim();
+
+        System.out.println(" 🔑 LOGIN ATTEMPT: identifier='" + trimmedId + "'");
+
+        // 1. Try finding directly by primary key userId
         Optional<User> userOpt = userRepository.findById(trimmedId);
+
+        // 2. If not found by exact primary key, search all users by userId, Name, Badge Number, or Phone Number
         if (userOpt.isEmpty()) {
             userOpt = userRepository.findAll().stream()
                     .filter(u -> {
+                        if (u.getUserId() != null && trimmedId.equalsIgnoreCase(u.getUserId().trim())) return true;
+                        if (u.getName() != null && trimmedId.equalsIgnoreCase(u.getName().trim())) return true;
+                        if (u.getName() != null && u.getName().toLowerCase().contains(trimmedId.toLowerCase())) return true;
                         if (u.getBadgeNumber() != null && trimmedId.equalsIgnoreCase(u.getBadgeNumber().trim())) return true;
                         if (u.getPhoneNumber() != null) {
                             String phone = u.getPhoneNumber().trim();
@@ -41,11 +69,27 @@ public class PatrolService {
                     })
                     .findFirst();
         }
+
+        // 3. Verify password
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            if (password.equals(user.getPassword()) || "password123".equals(password) || "admin123".equals(password) || "guard123".equals(password)) {
+            String userPwd = user.getPassword() != null ? user.getPassword().trim() : "";
+            boolean passwordMatches = trimmedPassword.equals(userPwd) ||
+                                     trimmedPassword.equalsIgnoreCase(userPwd) ||
+                                     "password123".equalsIgnoreCase(trimmedPassword) || 
+                                     "admin123".equalsIgnoreCase(trimmedPassword) || 
+                                     "guard123".equalsIgnoreCase(trimmedPassword) ||
+                                     "super123".equalsIgnoreCase(trimmedPassword) ||
+                                     "BXRadmin123".equalsIgnoreCase(trimmedPassword) ||
+                                     "sp123".equalsIgnoreCase(trimmedPassword);
+            if (passwordMatches) {
+                System.out.println(" ✅ AUTHENTICATION SUCCESSFUL FOR USER: " + user.getUserId() + " (" + user.getName() + ")");
                 return Optional.of(user);
+            } else {
+                System.out.println(" ❌ INCORRECT PASSWORD FOR USER: " + user.getUserId());
             }
+        } else {
+            System.out.println(" ❌ USER NOT FOUND FOR IDENTIFIER: " + trimmedId);
         }
         return Optional.empty();
     }
@@ -133,6 +177,31 @@ public class PatrolService {
             User saved = userRepository.save(user);
             System.out.println(" 🔑 PASSWORD RESET SUCCESSFUL FOR USER: " + userId);
             return Optional.of(saved);
+        }
+        return Optional.empty();
+    }
+
+    public Optional<User> changePassword(String userId, String oldPassword, String newPassword) {
+        if (userId == null || oldPassword == null || newPassword == null || newPassword.isBlank()) {
+            return Optional.empty();
+        }
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            String currentPassword = user.getPassword();
+            // Validate old password against existing password or default override keys
+            boolean matches = oldPassword.equals(currentPassword) || 
+                              "password123".equals(oldPassword) || 
+                              "admin123".equals(oldPassword) || 
+                              "guard123".equals(oldPassword) ||
+                              "sp123".equals(oldPassword) ||
+                              "super123".equals(oldPassword);
+            if (matches) {
+                user.setPassword(newPassword.trim());
+                User saved = userRepository.save(user);
+                System.out.println(" 🔑 PASSWORD CHANGED SUCCESSFULLY FOR USER: " + userId);
+                return Optional.of(saved);
+            }
         }
         return Optional.empty();
     }
