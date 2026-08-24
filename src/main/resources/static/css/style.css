@@ -273,6 +273,31 @@ body.theme-light small {
   color: #334155 !important;
 }
 
+/* Ensure Top Header Banner and Dark Banners maintain high contrast white/cyan text in Light Mode */
+body.theme-light .header-top-banner {
+  background: linear-gradient(180deg, #1e3a8a, #0f172a) !important;
+}
+
+body.theme-light .header-district-title,
+body.theme-light .header-district-title span {
+  color: #ffffff !important;
+}
+
+body.theme-light .header-district-title small {
+  color: #38bdf8 !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95) !important;
+}
+
+body.theme-light .bg-danger,
+body.theme-light .bg-danger * {
+  color: #ffffff !important;
+}
+
+body.theme-light .bg-primary,
+body.theme-light .bg-primary * {
+  color: #ffffff !important;
+}
+
 body.theme-light .text-cyan {
   color: #0284c7 !important;
   font-weight: 700 !important;
@@ -502,6 +527,78 @@ body.theme-light .table td {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.user-profile-badge {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+}
+
+.user-profile-badge:hover {
+  border-color: var(--accent-cyan);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* User Profile Account Dropdown Styling */
+.user-account-dropdown .dropdown-menu {
+  background-color: #1e293b !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+.user-account-dropdown .dropdown-item {
+  transition: all 0.2s ease;
+}
+
+.user-account-dropdown .dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  transform: translateX(3px);
+}
+
+body.theme-light .user-account-dropdown .dropdown-menu {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+body.theme-light .user-account-dropdown .dropdown-item:hover {
+  background-color: #f1f5f9 !important;
+}
+
+.user-info-stacked {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.25;
+}
+
+.user-info-stacked .user-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+body.theme-light .user-info-stacked .user-name {
+  color: #0f172a !important;
+}
+
+.user-info-stacked .user-subtext {
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: #38bdf8;
+  white-space: nowrap;
+}
+
+body.theme-light .user-info-stacked .user-subtext {
+  color: #0284c7 !important;
 }
 
 .user-selector select {

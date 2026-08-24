@@ -18,8 +18,8 @@
             <span class="kpi-value text-warning" th:text="${analytics.activeDuties}">1</span>
         </div>
         <div class="kpi-card">
-            <span class="kpi-title">Incident Alerts</span>
-            <span class="kpi-value text-danger" th:text="${analytics.incidentScans}">0</span>
+            <span class="kpi-title">QR Not Scanned</span>
+            <span class="kpi-value text-danger" th:text="${analytics.qrNotScanned != null ? analytics.qrNotScanned : 0}">0</span>
         </div>
     </div>
 
