@@ -515,11 +515,21 @@ public class PatrolService {
         long incidentScans = userLogs.stream().filter(l -> "Incident".equalsIgnoreCase(l.getStatus())).count();
         long onTimeScans = userLogs.stream().filter(l -> "On-Time".equalsIgnoreCase(l.getStatus())).count();
 
+        Set<String> scannedIds = new HashSet<>();
+        userLogs.forEach(l -> {
+            if (l.getCheckpointId() != null) scannedIds.add(l.getCheckpointId());
+            if (l.getQrId() != null) scannedIds.add(l.getQrId());
+        });
+        long qrNotScanned = allCheckpoints.stream()
+                .filter(c -> !scannedIds.contains(c.getCheckpointId()) && !scannedIds.contains(c.getQrCodeData()))
+                .count();
+
         double complianceRate = totalScans == 0 ? 100.0 : Math.round((double) onTimeScans / totalScans * 1000.0) / 10.0;
 
         stats.put("totalScans", totalScans);
         stats.put("onTimeScans", onTimeScans);
         stats.put("incidentScans", incidentScans);
+        stats.put("qrNotScanned", qrNotScanned);
         stats.put("complianceRate", complianceRate);
         stats.put("totalCheckpoints", allCheckpoints.size());
         stats.put("activeDuties",
@@ -540,11 +550,21 @@ public class PatrolService {
         long incidentScans = allLogs.stream().filter(l -> "Incident".equalsIgnoreCase(l.getStatus())).count();
         long onTimeScans = allLogs.stream().filter(l -> "On-Time".equalsIgnoreCase(l.getStatus())).count();
 
+        Set<String> scannedIds = new HashSet<>();
+        allLogs.forEach(l -> {
+            if (l.getCheckpointId() != null) scannedIds.add(l.getCheckpointId());
+            if (l.getQrId() != null) scannedIds.add(l.getQrId());
+        });
+        long qrNotScanned = allCheckpoints.stream()
+                .filter(c -> !scannedIds.contains(c.getCheckpointId()) && !scannedIds.contains(c.getQrCodeData()))
+                .count();
+
         double complianceRate = totalScans == 0 ? 100.0 : Math.round((double) onTimeScans / totalScans * 1000.0) / 10.0;
 
         stats.put("totalScans", totalScans);
         stats.put("onTimeScans", onTimeScans);
         stats.put("incidentScans", incidentScans);
+        stats.put("qrNotScanned", qrNotScanned);
         stats.put("complianceRate", complianceRate);
         stats.put("totalCheckpoints", allCheckpoints.size());
         stats.put("activeDuties",

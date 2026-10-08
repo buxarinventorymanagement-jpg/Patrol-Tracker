@@ -32,7 +32,7 @@
                 <img th:src="@{/images/bihar-police-logo.svg}" alt="Bihar Police Logo" class="police-logo-img">
                 <div class="header-district-title">
                     <span>BUXAR POLICE, BIHAR</span>
-                    <small>बिहार पुलिस — बक्सर, बिहार | PATROL TRACKER PORTAL</small>
+                    <small>बक्सर पुलिस, बिहार | PATROL TRACKER PORTAL</small>
                 </div>
             </div>
         </div>
@@ -93,42 +93,69 @@
                     <span>Light Mode</span>
                 </button>
 
-                <div class="user-selector d-none d-sm-block">
-                    <select id="activeUserSelect" class="form-select form-select-sm" title="Active Guard Profile">
-                        <option th:each="u : ${allUsers}" 
-                                th:value="${u.userId}" 
-                                th:text="${u.name} + ' (' + ${u.role} + ')'"
-                                th:selected="${u.userId == activeUserId}">
-                            Security Guard
-                        </option>
-                    </select>
+                <!-- Attractive Stacked Officer Profile & Account Settings Dropdown -->
+                <div class="dropdown user-account-dropdown">
+                    <button type="button" class="btn user-profile-badge d-flex align-items-center gap-2 border shadow-sm dropdown-toggle py-1 px-3" 
+                            id="userProfileDropdown" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false" 
+                            title="Officer Profile & Account Options">
+                        <i class="bi bi-shield-lock-fill text-warning fs-5"></i>
+                        <div class="user-info-stacked text-start me-1">
+                            <div class="user-name" th:text="${activeUser.name}">Mr. Shubham Arya</div>
+                            <div class="user-subtext" th:text="${activeUser.role} + (${activeUser.designation != null and !activeUser.designation.isBlank() ? ' (' + activeUser.designation + ')' : ''})">SP Admin</div>
+                        </div>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2 mt-2" aria-labelledby="userProfileDropdown" style="min-width: 250px; border-radius: 12px;">
+                        <li class="dropdown-header text-uppercase fw-bold px-3 py-1 text-secondary" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                            <i class="bi bi-person-badge me-1"></i>Officer Account Options
+                        </li>
+                        <li class="px-2 py-1">
+                            <label class="form-label small fw-bold text-info mb-1" style="font-size: 0.75rem;"><i class="bi bi-arrow-repeat me-1"></i>Switch Active Profile:</label>
+                            <select id="activeUserSelect" class="form-select form-select-sm" title="Switch Guard / Officer Profile">
+                                <option th:each="u : ${allUsers}" 
+                                        th:value="${u.userId}" 
+                                        th:text="${u.name} + ' (' + ${u.role} + ')'"
+                                        th:selected="${u.userId == activeUserId}">
+                                    Security Guard
+                                </option>
+                            </select>
+                        </li>
+                        <li><hr class="dropdown-divider my-2"></li>
+                        <li>
+                            <button type="button" class="dropdown-item rounded py-2 px-3 fw-bold d-flex align-items-center gap-2 text-warning" 
+                                    th:data-id="${activeUser.userId}"
+                                    th:data-name="${activeUser.name}"
+                                    th:data-designation="${activeUser.designation}"
+                                    th:data-phone="${activeUser.phoneNumber}"
+                                    th:data-badge="${activeUser.badgeNumber}"
+                                    th:data-role="${activeUser.role}"
+                                    onclick="openHeaderEditModal(this)">
+                                <i class="bi bi-pencil-square fs-6"></i>
+                                <span>Edit Profile Name</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item rounded py-2 px-3 fw-bold d-flex align-items-center gap-2 text-info"
+                                    th:data-id="${activeUser.userId}"
+                                    th:data-name="${activeUser.name}"
+                                    onclick="openChangePasswordModal(this)">
+                                <i class="bi bi-key-fill fs-6"></i>
+                                <span>Change Password</span>
+                            </button>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <a th:href="@{/logout}" class="dropdown-item rounded py-2 px-3 fw-bold d-flex align-items-center gap-2 text-danger">
+                                <i class="bi bi-box-arrow-right fs-6"></i>
+                                <span>Sign Out</span>
+                            </a>
+                        </li>
+                    </ul>
                 </div>
 
-                <!-- Quick Edit Admin / Active Officer Name Button -->
-                <button type="button" class="btn btn-outline-warning btn-sm fw-bold d-flex align-items-center gap-1 shadow-sm" 
-                        th:data-id="${activeUser.userId}"
-                        th:data-name="${activeUser.name}"
-                        th:data-designation="${activeUser.designation}"
-                        th:data-phone="${activeUser.phoneNumber}"
-                        th:data-badge="${activeUser.badgeNumber}"
-                        th:data-role="${activeUser.role}"
-                        onclick="openHeaderEditModal(this)"
-                        title="Edit Admin / Officer Name">
-                    <i class="bi bi-pencil-square"></i>
-                    <span class="d-none d-lg-inline">Edit Name</span>
-                </button>
-
-                <!-- Change Password Button (For all Logged-in Users & Admins) -->
-                <button type="button" class="btn btn-outline-info btn-sm fw-bold d-flex align-items-center gap-1 shadow-sm"
-                        th:data-id="${activeUser.userId}"
-                        th:data-name="${activeUser.name}"
-                        onclick="openChangePasswordModal(this)"
-                        title="Change Password">
-                    <i class="bi bi-key-fill"></i>
-                    <span class="d-none d-lg-inline">Change Password</span>
-                </button>
-
-                <a th:href="@{/logout}" class="btn btn-outline-danger btn-sm rounded-pill px-3" title="Sign Out of Patrol Tracker">
+                <!-- Sign Out Button Positioned Right Next to Profile Badge -->
+                <a th:href="@{/logout}" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-1" title="Sign Out of Patrol Tracker">
                     <i class="bi bi-box-arrow-right me-1"></i>Sign Out
                 </a>
             </div>
