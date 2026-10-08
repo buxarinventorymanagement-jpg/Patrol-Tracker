@@ -20,7 +20,6 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired private ArchiveLogRepository archiveLogRepository;
 
     @Override
-    @SuppressWarnings("null")
     public void run(String... args) throws Exception {
         // Migration: Ensure thanaName is set for existing database users
         userRepository.findAll().forEach(u -> {

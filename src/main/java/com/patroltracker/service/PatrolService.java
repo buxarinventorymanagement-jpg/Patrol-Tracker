@@ -11,7 +11,6 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 @Service
-@SuppressWarnings("null")
 public class PatrolService {
 
     @Autowired
