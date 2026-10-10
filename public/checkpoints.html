@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Checkpoints - Patrol Tracker</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; background: #f9fafb; color: #111827; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+    th { background: #f3f4f6; font-weight: 600; }
+    form { display: flex; gap: 10px; margin-bottom: 20px; }
+    input, button { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px; }
+    button { background: #2563eb; color: white; cursor: pointer; border: none; }
+    button:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <h1>Patrol Checkpoints</h1>
+  
+  <form id="addCheckpointForm">
+    <input type="text" id="name" placeholder="Checkpoint Name" required>
+    <input type="text" id="qr_code_data" placeholder="QR Code Data" required>
+    <button type="submit">Add Checkpoint</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>QR Code</th>
+        <th>Status</th>
+        <th>Interval (mins)</th>
+      </tr>
+    </thead>
+    <tbody id="checkpointTableBody">
+      <!-- Populated by JavaScript -->
+    </tbody>
+  </table>
+
+  <script>
+    async function loadCheckpoints() {
+      try {
+        const res = await fetch('/api/checkpoints');
+        const data = await res.json();
+        const tbody = document.getElementById('checkpointTableBody');
+        
+        tbody.innerHTML = data.map(cp => `
+          <tr>
+            <td>${cp.name}</td>
+            <td>${cp.qr_code_data}</td>
+            <td>${cp.status || 'Active'}</td>
+            <td>${cp.scan_interval_minutes || 60}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Failed to fetch checkpoints', err);
+      }
+    }
+
+    document.getElementById('addCheckpointForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const payload = {
+        name: document.getElementById('name').value,
+        qr_code_data: document.getElementById('qr_code_data').value,
+        status: 'Active',
+        scan_interval_minutes: 60
+      };
+      
+      try {
+        await fetch('/api/checkpoints', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        e.target.reset();
+        await loadCheckpoints();
+      } catch (err) {
+        console.error('Failed to create checkpoint', err);
+      }
+    });
+
+    // Initial load
+    loadCheckpoints();
+  </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id      String           @id @default(uuid())
+  name         String
+  role         String           @default("Guard")
+  badge_number String?
+  password     String           @default("guard123")
+  phone_number String?          @default("+91-9876543210")
+  designation  String?          @default("Constable (PC)")
+  thana_name   String?          @default("Buxar Town Thana")
+  status       String?          @default("Active")
+  created_at   DateTime         @default(now())
+  allocations  DutyAllocation[]
+  scan_logs    ScanLog[]
+
+  @@map("user_table")
+}
+
+model Checkpoint {
+  checkpoint_id         String    @id @default(uuid())
+  name                  String
+  qr_code_data          String    @unique
+  latitude              Decimal?  @db.Decimal(10, 6)
+  longitude             Decimal?  @db.Decimal(10, 6)
+  scan_interval_minutes Int?      @default(60)
+  instructions          String?
+  status                String?   @default("Active")
+  created_at            DateTime  @default(now())
+  scan_logs             ScanLog[]
+
+  @@map("checkpoints")
+}
+
+model DutyAllocation {
+  duty_id              String    @id @default(uuid())
+  user_id              String?
+  station_in_charge_id String?
+  shift_name           String
+  start_time           DateTime?
+  end_time             DateTime?
+  checkpoints_list     String
+  sms_status           String?   @default("Dispatched")
+  status               String?   @default("Assigned")
+  created_at           DateTime  @default(now())
+  user                 User?     @relation(fields: [user_id], references: [user_id])
+  scan_logs            ScanLog[]
+
+  @@map("duty_allocation")
+}
+
+model ScanLog {
+  scan_id       String          @id @default(uuid())
+  checkpoint_id String?
+  user_id       String?
+  duty_id       String?
+  scan_time     DateTime?       @default(now())
+  status        String          @default("On-Time")
+  latitude      Decimal?        @db.Decimal(10, 6)
+  longitude     Decimal?        @db.Decimal(10, 6)
+  notes         String?
+  qr_id         String?
+  thana_name    String?
+  photo_proof   String?
+  patrol_status String?
+  created_at    DateTime        @default(now())
+  user          User?           @relation(fields: [user_id], references: [user_id])
+  checkpoint    Checkpoint?     @relation(fields: [checkpoint_id], references: [checkpoint_id])
+  duty          DutyAllocation? @relation(fields: [duty_id], references: [duty_id])
+
+  @@map("scan_logs")
+}

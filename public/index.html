@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patrol Tracker - Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --accent: #10b981;
+      --danger: #ef4444;
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-light: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .badge {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+    .brand h1 {
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(to right, #60a5fa, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent);
+    }
+    nav {
+      display: flex;
+      gap: 8px;
+    }
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .nav-link.active, .nav-link:hover {
+      color: white;
+      background: var(--surface-light);
+    }
+    main {
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .panel-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    form.inline-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      margin-bottom: 24px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 6px;
+      color: white;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      border-color: var(--primary-light);
+    }
+    button.btn-primary {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 20px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button.btn-primary:hover {
+      opacity: 0.9;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th {
+      text-align: left;
+      padding: 12px 16px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .tag-active {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 13px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="badge">BIHAR POLICE</div>
+      <h1>Patrol Tracker</h1>
+    </div>
+    <nav>
+      <a href="/" class="nav-link active">Dashboard</a>
+      <a href="/checkpoints.html" class="nav-link">Checkpoints</a>
+    </nav>
+    <div class="status-indicator">
+      <div class="status-dot"></div>
+      <span id="apiStatusText">Connected to Vercel</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Checkpoints</div>
+        <div class="stat-value" id="checkpointCount">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Guards</div>
+        <div class="stat-value" id="userCount">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Recent Patrol Logs</div>
+        <div class="stat-value" id="logCount">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">System Backend</div>
+        <div class="stat-value" style="font-size: 20px; color: #38bdf8;">Node.js / Supabase</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Add New Checkpoint</h2>
+      </div>
+      <form id="addCheckpointForm" class="inline-form">
+        <input type="text" id="cpName" placeholder="Checkpoint Name (e.g. Ganga Ghat Point 1)" required />
+        <input type="text" id="cpQr" placeholder="QR Code Identifier (e.g. QR-BUX-01)" required />
+        <button type="submit" class="btn-primary">+ Add Point</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Active Checkpoints</h2>
+      </div>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Checkpoint Name</th>
+              <th>QR Code</th>
+              <th>Status</th>
+              <th>Interval</th>
+            </tr>
+          </thead>
+          <tbody id="checkpointTableBody">
+            <tr>
+              <td colspan="4" class="empty-state">Loading checkpoints...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    Bihar Police Patrol Monitoring & GPS Tracking Portal &copy; 2026. Hosted on Vercel with Supabase PostgreSQL.
+  </footer>
+
+  <script>
+    async function loadData() {
+      try {
+        const cpRes = await fetch('/api/checkpoints');
+        if (!cpRes.ok) throw new Error('API returned ' + cpRes.status);
+        const checkpoints = await cpRes.json();
+        
+        document.getElementById('checkpointCount').textContent = checkpoints.length;
+        
+        const tbody = document.getElementById('checkpointTableBody');
+        if (checkpoints.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No checkpoints found. Add your first checkpoint above!</td></tr>';
+        } else {
+          tbody.innerHTML = checkpoints.map(cp => `
+            <tr>
+              <td style="font-weight: 600;">${cp.name}</td>
+              <td><code>${cp.qr_code_data}</code></td>
+              <td><span class="tag tag-active">${cp.status || 'Active'}</span></td>
+              <td>${cp.scan_interval_minutes || 60} mins</td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Failed to load data', err);
+        document.getElementById('checkpointTableBody').innerHTML = 
+          `<tr><td colspan="4" class="empty-state" style="color: var(--danger);">Failed to load data: ${err.message}</td></tr>`;
+      }
+
+      try {
+        const usersRes = await fetch('/api/users');
+        if (usersRes.ok) {
+          const users = await usersRes.json();
+          document.getElementById('userCount').textContent = users.length;
+        }
+      } catch (e) { document.getElementById('userCount').textContent = '0'; }
+
+      try {
+        const logsRes = await fetch('/api/logs');
+        if (logsRes.ok) {
+          const logs = await logsRes.json();
+          document.getElementById('logCount').textContent = logs.length;
+        }
+      } catch (e) { document.getElementById('logCount').textContent = '0'; }
+    }
+
+    document.getElementById('addCheckpointForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('cpName').value.trim();
+      const qr = document.getElementById('cpQr').value.trim();
+      if (!name || !qr) return;
+
+      try {
+        const res = await fetch('/api/checkpoints', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            qr_code_data: qr,
+            status: 'Active',
+            scan_interval_minutes: 60
+          })
+        });
+        if (res.ok) {
+          document.getElementById('cpName').value = '';
+          document.getElementById('cpQr').value = '';
+          loadData();
+        } else {
+          const data = await res.json();
+          alert('Error: ' + (data.error || 'Failed to add checkpoint'));
+        }
+      } catch (err) {
+        alert('Request failed: ' + err.message);
+      }
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
