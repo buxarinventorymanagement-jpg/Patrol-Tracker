@@ -1,0 +1,22 @@
+# Render Blueprint - Patrol Tracker Spring Boot Backend
+# Deploy this to Render using: https://render.com/deploy
+# The Dockerfile in this repo is used automatically.
+
+services:
+  - type: web
+    name: patrol-tracker
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: SUPABASE_DB_URL
+        sync: false
+      - key: SUPABASE_DB_USER
+        sync: false
+      - key: SUPABASE_DB_PASSWORD
+        sync: false
+      - key: SUPABASE_DB_DRIVER
+        value: "org.postgresql.Driver"
+    healthCheckPath: /login
